@@ -37,6 +37,23 @@ fun MainScreen(
           override fun onPageFinished(view: WebView?, url: String?) {
             Log.d("WV", "Loaded: $url")
           }
+
+          override fun shouldOverrideUrlLoading(
+            view: WebView?,
+            request: android.webkit.WebResourceRequest?
+          ): Boolean {
+            val url = request?.url?.toString() ?: return false
+            if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("tel:") || url.startsWith("mailto:")) {
+              try {
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                view?.context?.startActivity(intent)
+                return true
+              } catch (e: Exception) {
+                Log.e("WV", "Error opening external url: $url", e)
+              }
+            }
+            return false
+          }
         }
 
         webChromeClient = object : WebChromeClient() {
@@ -101,6 +118,7 @@ fun MainScreen(
         post { loadUrl("file:///android_asset/dist/index.html") }
       }
     },
+
     modifier = modifier.fillMaxSize()
   )
 }

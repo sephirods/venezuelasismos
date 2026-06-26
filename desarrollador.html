@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desarrollador | Sismología Venezuela</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-app: #090b10;
+      --bg-card: rgba(21, 27, 38, 0.7);
+      --border-color: rgba(36, 44, 60, 0.6);
+      --text-primary: #f0f3f8;
+      --text-secondary: #8a96a8;
+      --accent-red: #ff3b30;
+      --accent-blue: #007aff;
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Fondo animado decorativo */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0) 70%);
+      top: -100px;
+      right: -100px;
+      z-index: -1;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0, 122, 255, 0.1) 0%, rgba(0, 122, 255, 0) 70%);
+      bottom: -150px;
+      left: -150px;
+      z-index: -1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .profile-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--accent-red) 0%, #ff9500 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px auto;
+      box-shadow: 0 8px 24px rgba(255, 59, 48, 0.3);
+      border: 3px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .profile-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    h1 {
+      font-family: var(--font-title);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 0%, #a2b0c3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .role {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent-red);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, var(--border-color) 50%, rgba(255,255,255,0) 100%);
+      margin: 24px 0;
+    }
+
+    .bio {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      text-align: justify;
+    }
+
+    .support-box {
+      background: rgba(0, 122, 255, 0.06);
+      border: 1px dashed rgba(0, 122, 255, 0.25);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+
+    .support-box h3 {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .support-box p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .contact-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 14px 20px;
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .contact-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--text-secondary);
+      transform: translateY(-2px);
+    }
+
+    .contact-item svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    .contact-item:hover svg {
+      color: var(--text-primary);
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--text-primary);
+      color: var(--bg-app);
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-back:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="profile-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    </div>
+
+    <h1>Juan Andrés Baez</h1>
+    <div class="role">Creador & Desarrollador</div>
+
+    <div class="divider"></div>
+
+    <p class="bio">
+      Esta aplicación nació con el firme propósito de ayudar al pueblo venezolano a mantenerse informado y seguro ante eventos sísmicos en tiempo real. Al integrar los datos locales de FUNVISIS y globales del USGS, esta plataforma ofrece un canal de alerta rápido, accesible y confiable para todos.
+    </p>
+
+    <div class="support-box">
+      <h3>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Colaboraciones y Donaciones
+      </h3>
+      <p>
+        El mantenimiento de los servidores de datos e infraestructura es financiado de forma independiente. Si deseas donar para apoyar este proyecto o colaborar con su desarrollo, comunícate directamente conmigo a través de cualquiera de los siguientes medios. ¡Tu ayuda hace la diferencia!
+      </p>
+    </div>
+
+    <div class="contact-list">
+      <!-- Teléfono (WhatsApp / Telegram) -->
+      <a href="https://wa.me/584129958044" target="_blank" class="contact-item">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+        </svg>
+        <span>Llamar / WhatsApp: +58 412 995 8044</span>
+      </a>
+
+      <!-- Instagram -->
+      <a href="https://www.instagram.com/thegrayjab/" target="_blank" class="contact-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+        <span>Instagram: @thegrayjab</span>
+      </a>
+    </div>
+
+    <a href="index.html" class="btn-back">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Volver al Mapa
+    </a>
+  </div>
+</body>
+</html>

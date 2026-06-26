@@ -1,6 +1,7 @@
 import geojsonData from './venezuela.json';
 
 // --- VARIABLES DE ESTADO ---
+const CURRENT_VERSION = "1.0.0"; // Versión actual de la app
 let map;
 let earthquakes = []; // Datos de la API de USGS
 let simulatedEarthquakes = []; // Datos simulados por el usuario
@@ -10,15 +11,18 @@ let activeSonarMarkers = []; // Almacena círculos de sonar en curso
 let selectedEventId = null;
 let isSimulationMode = false;
 let soundEnabled = true;
-let notificationsEnabled = false;
-let isLoading = true; // Indica si la carga inicial de sismos está en curso
-
-// Comprobar si el navegador ya concedió permiso para notificaciones
-if (typeof window !== 'undefined' && 'Notification' in window) {
-  if (Notification.permission === 'granted') {
-    notificationsEnabled = true;
+let notificationsState = 'all'; // 'off', 'important', 'all'
+if (typeof window !== 'undefined') {
+  const cachedState = localStorage.getItem('notifications_state');
+  if (cachedState) {
+    notificationsState = cachedState;
+  } else if ('Notification' in window && Notification.permission !== 'granted') {
+    notificationsState = 'off';
   }
 }
+
+let isLoading = true; // Indica si la carga inicial de sismos está en curso
+let isAppInitializing = true; // Evita alertas sonoras y popups en la carga inicial y primer poll
 
 // Configuración de Bounding Box para Venezuela (y alrededores activos sísmicamente)
 const VENEZUELA_BOUNDS = {
@@ -189,7 +193,7 @@ function initMap() {
   loadLocalMap();
   
   // Cambiar el prefijo de atribución de Leaflet por la firma del desarrollador
-  map.attributionControl.setPrefix('Desarrollado por Juan A. Baez');
+  map.attributionControl.setPrefix('Desarrollado por <a href="desarrollador.html" style="color: var(--text-secondary); text-decoration: none; font-weight: 700; border-bottom: 1px dashed var(--text-muted);">Juan A. Baez</a>');
   
   // 2. Cargar mapas oscuros de fondo desde almacenamiento local (100% offline)
   L.tileLayer('tiles/{z}/{x}/{y}.png', {
@@ -205,6 +209,22 @@ function initMap() {
       deselectActiveCard();
     }
   });
+
+  // Control de colapso de leyenda
+  const legendEl = document.getElementById('map-legend');
+  const legendToggle = document.getElementById('legend-toggle-btn');
+  if (legendEl && legendToggle) {
+    legendToggle.addEventListener('click', () => {
+      legendEl.classList.toggle('collapsed');
+      localStorage.setItem('legend_collapsed', legendEl.classList.contains('collapsed'));
+    });
+    
+    // Restaurar estado de colapso guardado
+    const isCollapsed = localStorage.getItem('legend_collapsed') === 'true';
+    if (isCollapsed) {
+      legendEl.classList.add('collapsed');
+    }
+  }
 }
 
 // --- COLORES Y CATEGORÍAS DE MAGNITUD ---
@@ -262,6 +282,30 @@ async function fetchEarthquakeData(timeFilter) {
   }
 }
 
+// --- FETCH DE DATOS DESDE NUESTRO ARCHIVO SCRAPED DE FUNVISIS ---
+async function fetchFunvisisData() {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/sismos_venezuela.json');
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const data = await response.json();
+    return data.features || [];
+  } catch (error) {
+    console.warn("No se pudo cargar la base de sismos de FUNVISIS:", error.message);
+    return [];
+  }
+}
+
+// --- COMPROBAR SI UN SISMO DE FUNVISIS ES DUPLICADO DE UNO DE LA USGS ---
+function isDuplicate(event, list) {
+  return list.some(item => {
+    const timeDiff = Math.abs(item.properties.time - event.properties.time);
+    const latDiff = Math.abs(item.geometry.coordinates[1] - event.geometry.coordinates[1]);
+    const lonDiff = Math.abs(item.geometry.coordinates[0] - event.geometry.coordinates[0]);
+    // Considerar duplicado si ocurren con menos de 10 min de diferencia y a menos de 50km (0.5 grados)
+    return timeDiff < 10 * 60 * 1000 && latDiff < 0.5 && lonDiff < 0.5;
+  });
+}
+
 // --- PROCESAMIENTO DE DATOS SÍSMICOS ---
 function processEarthquakes(newFeatures, isInitialLoad = false) {
   let hasNewLiveEvent = false;
@@ -274,16 +318,21 @@ function processEarthquakes(newFeatures, isInitialLoad = false) {
     const id = feature.id;
     
     // Si es un sismo nuevo que no estaba en nuestra base de datos conocida
-    if (!knownEventIds.has(id)) {
-      knownEventIds.add(id);
-      earthquakes.push(feature);
-      addedAny = true;
-      
-      // Si NO es la carga inicial de la página, es un evento en tiempo real
-      if (!isInitialLoad) {
-        hasNewLiveEvent = true;
-        triggerRealTimeAlert(feature);
+    if (knownEventIds.has(id) || isDuplicate(feature, earthquakes)) {
+      if (!knownEventIds.has(id)) {
+        knownEventIds.add(id);
       }
+      return;
+    }
+    
+    knownEventIds.add(id);
+    earthquakes.push(feature);
+    addedAny = true;
+    
+    // Si NO es la carga inicial y ya terminó la inicialización de la app, es un evento en tiempo real
+    if (!isInitialLoad && !isAppInitializing) {
+      hasNewLiveEvent = true;
+      triggerRealTimeAlert(feature);
     }
   });
 
@@ -306,7 +355,10 @@ function triggerRealTimeAlert(feature, isSimulated = false) {
   const place = feature.properties.place;
   
   // 1. Play Sonar Warning Sound
-  playEarthquakeSound(mag);
+  const shouldNotify = (notificationsState === 'all') || (notificationsState === 'important' && mag >= 4.0);
+  if (shouldNotify) {
+    playEarthquakeSound(mag);
+  }
   
   // 2. Crear marcador del Sonar en el mapa
   const sonarIcon = L.divIcon({
@@ -343,7 +395,7 @@ function triggerRealTimeAlert(feature, isSimulated = false) {
   }, 1500);
   
   // 5. Enviar Notificación Push si está activa
-  if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+  if (shouldNotify && 'Notification' in window && Notification.permission === 'granted') {
     const title = isSimulated ? `M ${mag.toFixed(1)} - Sismo Simulado` : `M ${mag.toFixed(1)} - ¡Nuevo Sismo en Venezuela!`;
     try {
       new Notification(title, {
@@ -355,6 +407,72 @@ function triggerRealTimeAlert(feature, isSimulated = false) {
       console.error("Error al enviar notificación push:", e);
     }
   }
+}
+
+// --- MOSTRAR TOAST NOTIFICACIÓN EN LA PANTALLA ---
+function showToast(message, type = 'info') {
+  const mapContainer = document.querySelector('.map-container');
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style.position = 'absolute';
+    toastContainer.style.top = '76px';
+    toastContainer.style.left = '50%';
+    toastContainer.style.transform = 'translateX(-50%)';
+    toastContainer.style.display = 'flex';
+    toastContainer.style.flexDirection = 'column';
+    toastContainer.style.gap = '8px';
+    toastContainer.style.zIndex = '9999';
+    toastContainer.style.pointerEvents = 'none';
+    if (mapContainer) {
+      mapContainer.appendChild(toastContainer);
+    } else {
+      toastContainer.style.position = 'fixed';
+      document.body.appendChild(toastContainer);
+    }
+  }
+  
+  const toast = document.createElement('div');
+  toast.style.background = 'rgba(15, 19, 26, 0.95)';
+  toast.style.backdropFilter = 'blur(10px)';
+  toast.style.webkitBackdropFilter = 'blur(10px)';
+  toast.style.border = '1px solid var(--border-color)';
+  toast.style.color = 'var(--text-primary)';
+  toast.style.padding = '10px 20px';
+  toast.style.borderRadius = '30px';
+  toast.style.fontSize = '0.75rem';
+  toast.style.fontWeight = '700';
+  toast.style.boxShadow = 'var(--shadow-lg)';
+  toast.style.display = 'flex';
+  toast.style.alignItems = 'center';
+  toast.style.gap = '8px';
+  toast.style.opacity = '0';
+  toast.style.transform = 'translateY(-20px)';
+  toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+  
+  let borderColor = 'var(--border-color)';
+  if (type === 'important') borderColor = 'var(--accent-red)';
+  else if (type === 'all') borderColor = 'var(--accent-blue)';
+  toast.style.borderColor = borderColor;
+  
+  toast.innerHTML = message;
+  toastContainer.appendChild(toast);
+  
+  // Trigger animation
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  }, 30);
+  
+  // Remove after 2.5 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px)';
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 2200);
 }
 
 // --- ACTUALIZAR LA INTERFAZ DE USUARIO ---
@@ -369,6 +487,16 @@ function updateUI() {
   const filteredEvents = allEvents.filter(event => {
     // Filtrar por magnitud
     if (event.properties.mag < minMag) return false;
+
+    // Filtrar por categoría de intensidad
+    const intensityFilterEl = document.getElementById('intensity-filter');
+    if (intensityFilterEl) {
+      const selectedIntensity = intensityFilterEl.value;
+      if (selectedIntensity !== 'all') {
+        const cat = getMagCategory(event.properties.mag);
+        if (cat !== selectedIntensity) return false;
+      }
+    }
     
     // Filtrar por tiempo
     const timeDiff = Date.now() - event.properties.time;
@@ -447,12 +575,12 @@ function renderList(events) {
   listEl.innerHTML = '';
   
   events.forEach(event => {
-    const { mag, place, time, isSimulated } = event.properties;
+    const { mag, place, time, isSimulated, isFunvisis } = event.properties;
     const depth = event.geometry.coordinates[2];
     const cat = getMagCategory(mag);
     
     const card = document.createElement('div');
-    card.className = `eq-card border-${cat} ${event.id === selectedEventId ? 'active' : ''} ${isSimulated ? 'simulated' : ''}`;
+    card.className = `eq-card border-${cat} ${event.id === selectedEventId ? 'active' : ''} ${isSimulated ? 'simulated' : ''} ${isFunvisis ? 'funvisis-event' : ''}`;
     card.dataset.id = event.id;
     
     // Formatear fecha en Venezuela (VET)
@@ -478,6 +606,7 @@ function renderList(events) {
           <span class="eq-tag">Prof: ${Math.round(depth)} km</span>
           <span class="eq-tag">M: ${event.geometry.coordinates[1].toFixed(2)}, ${event.geometry.coordinates[0].toFixed(2)}</span>
           ${isSimulated ? '<span class="eq-tag-sim">SIMULADO</span>' : ''}
+          ${isFunvisis ? '<span class="eq-tag-funvisis">FUNVISIS</span>' : ''}
         </div>
       </div>
     `;
@@ -540,7 +669,7 @@ function renderMapMarkers(events) {
   events.forEach(event => {
     const id = event.id;
     const [lon, lat, depth] = event.geometry.coordinates;
-    const { mag, place, time, url, isSimulated } = event.properties;
+    const { mag, place, time, url, isSimulated, isFunvisis } = event.properties;
     const cat = getMagCategory(mag);
     const color = getMagColor(mag);
     
@@ -579,6 +708,7 @@ function renderMapMarkers(events) {
         <div class="map-popup-header">
           <span class="map-popup-mag mag-${cat}">M ${mag.toFixed(1)}</span>
           ${isSimulated ? '<span class="map-popup-sim-tag">SIMULADO</span>' : ''}
+          ${isFunvisis ? '<span class="map-popup-sim-tag" style="background:rgba(0,122,255,0.15);color:var(--accent-blue);border:1px solid rgba(0,122,255,0.3);">FUNVISIS</span>' : ''}
         </div>
         <div class="map-popup-place">${place}</div>
         <div class="map-popup-row">
@@ -593,7 +723,7 @@ function renderMapMarkers(events) {
           <span>Coordenadas:</span>
           <span>${lat.toFixed(3)}°, ${lon.toFixed(3)}°</span>
         </div>
-        ${!isSimulated ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles USGS →</a>` : ''}
+        ${isFunvisis ? `<a href="https://www.funvisis.gob.ve/" target="_blank" rel="noopener" class="map-popup-link">Detalles FUNVISIS →</a>` : (!isSimulated ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles USGS →</a>` : '')}
       </div>
     `;
     
@@ -637,15 +767,28 @@ async function startRealTimePolling() {
   lastUpdateTimer = setInterval(updateLastUpdatedLabel, 1000);
 
   const poll = async () => {
-    // Solo pedir los últimos 10 minutos en cada poll → respuesta ~50x más pequeña y rápida
-    const newFeatures = await fetchEarthquakeData('10min');
-    if (newFeatures !== null) {
-      lastUpdateTime = Date.now();
-      updateLastUpdatedLabel();
+    // Polling en tiempo real: pedir últimos 10min de USGS y base actualizada de FUNVISIS
+    const [newUsgsFeatures, newFunvisisFeatures] = await Promise.all([
+      fetchEarthquakeData('10min'),
+      fetchFunvisisData()
+    ]);
+    
+    let combined = [];
+    if (newUsgsFeatures !== null) {
+      combined = combined.concat(newUsgsFeatures);
       updateConnectionStatus(true);
-      processEarthquakes(newFeatures, false);
     } else {
       updateConnectionStatus(false);
+    }
+    
+    if (newFunvisisFeatures) {
+      combined = combined.concat(newFunvisisFeatures);
+    }
+    
+    if (combined.length > 0) {
+      lastUpdateTime = Date.now();
+      updateLastUpdatedLabel();
+      processEarthquakes(combined, false);
     }
   };
 
@@ -841,63 +984,120 @@ function initControls() {
   
   // Control de Notificaciones (UI Update)
   function updateNotificationBtn() {
-    if (notifBtn) {
-      notifBtn.classList.toggle('active', notificationsEnabled);
+    if (!notifBtn) return;
+    
+    // Remover todas las clases de estado
+    notifBtn.classList.remove('active', 'accent-important', 'accent-all');
+    
+    const labelSpan = notifBtn.querySelector('span');
+    const badgeSpan = notifBtn.querySelector('.control-btn-badge');
+    
+    if (notificationsState === 'off') {
+      notifBtn.title = "Notificaciones: Silenciado";
+      if (labelSpan) labelSpan.textContent = "Silenciado";
+      if (badgeSpan) badgeSpan.style.display = 'none';
+    } else if (notificationsState === 'important') {
+      notifBtn.classList.add('active', 'accent-important');
+      notifBtn.title = "Notificaciones: Solo Importantes (> 4.0 M)";
+      if (labelSpan) labelSpan.textContent = "Importantes";
+      if (badgeSpan) {
+        badgeSpan.textContent = "4M";
+        badgeSpan.style.display = 'block';
+      }
+    } else if (notificationsState === 'all') {
+      notifBtn.classList.add('active', 'accent-all');
+      notifBtn.title = "Notificaciones: Todos los Sismos";
+      if (labelSpan) labelSpan.textContent = "Todos";
+      if (badgeSpan) {
+        badgeSpan.textContent = "Todo";
+        badgeSpan.style.display = 'block';
+      }
     }
   }
   
   // Inicializar estado del botón de notificaciones
   const isNative = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
   if (isNative) {
-    notificationsEnabled = AndroidApp.isNotificationsEnabled();
+    const nativeEnabled = AndroidApp.isNotificationsEnabled();
+    if (!nativeEnabled) {
+      notificationsState = 'off';
+    } else if (notificationsState === 'off') {
+      notificationsState = 'all';
+    }
   }
   updateNotificationBtn();
   
   // Manejador del clic manual en el botón de notificaciones
   if (notifBtn) {
     notifBtn.addEventListener('click', () => {
+      // Ciclar estados: 'off' -> 'important' -> 'all' -> 'off'
+      if (notificationsState === 'off') {
+        notificationsState = 'important';
+      } else if (notificationsState === 'important') {
+        notificationsState = 'all';
+      } else {
+        notificationsState = 'off';
+      }
+      
+      // Guardar en localStorage
+      localStorage.setItem('notifications_state', notificationsState);
+      
+      // Mostrar toast visual de estado
+      if (notificationsState === 'off') {
+        showToast("🔕 Alertas silenciadas", "off");
+      } else if (notificationsState === 'important') {
+        showToast("🔔 Alertas: Solo importantes (≥ 4.0 M)", "important");
+      } else if (notificationsState === 'all') {
+        showToast("🔔 Alertas: Todos los sismos", "all");
+      }
+      
       const isNative = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
       if (isNative) {
-        notificationsEnabled = !notificationsEnabled;
-        AndroidApp.setNotificationsEnabled(notificationsEnabled);
+        AndroidApp.setNotificationsEnabled(notificationsState !== 'off');
+        updateNotificationBtn();
+        return;
+      }
+
+      if (notificationsState === 'off') {
         updateNotificationBtn();
         return;
       }
 
       if (!('Notification' in window)) {
         alert('Tu navegador no soporta notificaciones de escritorio.');
+        notificationsState = 'off';
+        updateNotificationBtn();
         return;
       }
       
       if (Notification.permission === 'denied') {
         alert('Has bloqueado las notificaciones en tu navegador. Por favor habilítalas desde la configuración del sitio en tu navegador (junto a la barra de direcciones).');
+        notificationsState = 'off';
+        updateNotificationBtn();
         return;
       }
       
       if (Notification.permission === 'default') {
         requestNotificationPermission((permission) => {
           if (permission === 'granted') {
-            notificationsEnabled = true;
             updateNotificationBtn();
+            const text = notificationsState === 'important' ? "Solo importantes (> 4.0 M)" : "Todos los sismos";
             new Notification("Notificaciones Activas", {
-              body: "Recibirás alertas en pantalla cuando se detecten nuevos sismos.",
+              body: `Recibirás alertas de sismos: ${text}.`,
               icon: "https://earthquake.usgs.gov/favicon.ico"
             });
           } else {
-            notificationsEnabled = false;
+            notificationsState = 'off';
             updateNotificationBtn();
           }
         });
       } else if (Notification.permission === 'granted') {
-        notificationsEnabled = !notificationsEnabled;
         updateNotificationBtn();
-        
-        if (notificationsEnabled) {
-          new Notification("Notificaciones Reactivadas", {
-            body: "Las alertas de sismos están activas.",
-            icon: "https://earthquake.usgs.gov/favicon.ico"
-          });
-        }
+        const text = notificationsState === 'important' ? "Solo importantes (> 4.0 M)" : "Todos los sismos";
+        new Notification("Configuración de Alertas", {
+          body: `Alertas configuradas: ${text}.`,
+          icon: "https://earthquake.usgs.gov/favicon.ico"
+        });
       }
     });
   }
@@ -909,7 +1109,10 @@ function initControls() {
       if (isNative) return;
       requestNotificationPermission((permission) => {
         if (permission === 'granted') {
-          notificationsEnabled = true;
+          if (notificationsState === 'off') {
+            notificationsState = 'all';
+            localStorage.setItem('notifications_state', 'all');
+          }
           updateNotificationBtn();
           new Notification("Notificaciones Activas", {
             body: "Recibirás alertas en pantalla cuando se detecten nuevos sismos en Venezuela.",
@@ -929,6 +1132,15 @@ function initControls() {
     deselectActiveCard();
     updateUI();
   });
+
+  // Filtro de Intensidad
+  const intensityFilter = document.getElementById('intensity-filter');
+  if (intensityFilter) {
+    intensityFilter.addEventListener('change', () => {
+      deselectActiveCard();
+      updateUI();
+    });
+  }
   
   // Filtro de Magnitud
   magFilter.addEventListener('input', (e) => {
@@ -943,6 +1155,9 @@ function initControls() {
     magFilter.value = 0.0;
     magValDisplay.textContent = "0.0 M";
     timeFilter.value = '30d';
+    if (intensityFilter) {
+      intensityFilter.value = 'all';
+    }
     deselectActiveCard();
     
     // Recargar datos por defecto (30 días)
@@ -1024,6 +1239,50 @@ function showOfflineMessage() {
   }
 }
 
+// --- SISTEMA DE ACTUALIZACIÓN AUTOMÁTICA (GITHUB) ---
+async function checkForUpdates() {
+  const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+  const forceCheck = window.location.search.includes('check-updates');
+  
+  if (!isNativeApp && !forceCheck) return;
+
+  try {
+    const response = await fetch(`https://raw.githubusercontent.com/sephirods/venezuelasismos/main/version.json?t=${Date.now()}`);
+    if (!response.ok) return;
+    const data = await response.json();
+    
+    if (data.version && data.version !== CURRENT_VERSION) {
+      const banner = document.getElementById('update-banner');
+      if (banner) {
+        const titleEl = banner.querySelector('.banner-text strong');
+        const descEl = banner.querySelector('.banner-text p');
+        const downloadBtn = document.getElementById('btn-update-download');
+        
+        if (titleEl) titleEl.textContent = `🚀 Actualización Disponible (v${data.version})`;
+        if (descEl) descEl.textContent = data.description || 'Hay una nueva versión de la aplicación con mejoras importantes. ¡Descárgala ahora!';
+        if (downloadBtn) downloadBtn.href = data.downloadUrl || 'instalar.html';
+        
+        banner.classList.remove('hidden');
+      }
+    }
+  } catch (e) {
+    console.warn("No se pudo verificar actualizaciones:", e);
+  }
+}
+
+function initUpdateBanner() {
+  const banner = document.getElementById('update-banner');
+  const closeBtn = document.getElementById('close-update-banner-btn');
+  if (!banner || !closeBtn) return;
+
+  closeBtn.addEventListener('click', () => {
+    banner.classList.add('hidden');
+  });
+
+  // Comprobar actualizaciones tras 3 segundos de iniciar la app
+  setTimeout(checkForUpdates, 3000);
+}
+
 // --- CARGA INICIAL DE LA APP ---
 function initApp() {
   // 1. Reloj en vivo
@@ -1058,31 +1317,53 @@ function initApp() {
     }
   }
   
-  // 5. Carga inicial de datos (30 días) - Asíncrono para evitar bloqueos del hilo principal
-  fetchEarthquakeData('30d')
-    .then(initialRawEvents => {
-      isLoading = false;
-      if (initialRawEvents === null) {
-        updateConnectionStatus(false);
-        if (earthquakes.length === 0) {
-          showOfflineMessage();
-        }
-      } else {
-        updateConnectionStatus(true);
-        processEarthquakes(initialRawEvents, true);
-      }
-    })
-    .catch(error => {
-      isLoading = false;
+  // 5. Carga inicial de datos (USGS 30d + FUNVISIS) - Asíncrono para evitar bloqueos del hilo principal
+  Promise.all([
+    fetchEarthquakeData('30d'),
+    fetchFunvisisData()
+  ]).then(([initialRawEvents, funvisisEvents]) => {
+    isLoading = false;
+    let combined = [];
+    
+    if (initialRawEvents !== null) {
+      combined = combined.concat(initialRawEvents);
+      updateConnectionStatus(true);
+    } else {
       updateConnectionStatus(false);
-      console.error("Error al cargar sismos iniciales de USGS:", error);
+    }
+    
+    if (funvisisEvents) {
+      combined = combined.concat(funvisisEvents);
+    }
+    
+    if (combined.length === 0) {
       if (earthquakes.length === 0) {
         showOfflineMessage();
       }
-    });
+    } else {
+      processEarthquakes(combined, true);
+    }
+    
+    // Desactivar inicialización después de procesar y renderizar los sismos iniciales
+    // Damos un pequeño margen para asegurar que el primer poll termine
+    setTimeout(() => {
+      isAppInitializing = false;
+    }, 2000);
+  }).catch(error => {
+    isLoading = false;
+    isAppInitializing = false;
+    updateConnectionStatus(false);
+    console.error("Error al cargar sismos iniciales:", error);
+    if (earthquakes.length === 0) {
+      showOfflineMessage();
+    }
+  });
   
   // 6. Iniciar polling en tiempo real cada 15s
   startRealTimePolling();
+  
+  // 7. Verificar si hay actualizaciones de la APK
+  initUpdateBanner();
 }
 
 // Ejecutar cuando se cargue la estructura DOM
