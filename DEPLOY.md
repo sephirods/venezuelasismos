@@ -47,8 +47,8 @@ terremotos/
 │   ├── assets/
 │   ├── version.json         ← ¡MANTENER ACTUALIZADO!
 │   └── sismos_venezuela.json
-├── app/                     ← Proyecto Android
-│   ├── app/src/main/assets/web/  ← Assets web dentro del APK
+├── app/                     ← Proyecto Android (Proyecto Gradle)
+│   ├── app/src/main/assets/dist/  ← Assets web que lee el APK (compilar aquí)
 │   ├── gradlew.bat
 │   └── sismos-venezuela.apk      ← APK compilado (output final)
 └── version.json             ← Versión actual (fuente de verdad)
@@ -190,7 +190,7 @@ Copy-Item "version.json" "web\version.json" -Force
 ### Paso 3 — Compilar web
 
 ```powershell
-cmd /c "cd test && npm run build && node post-build.cjs && xcopy /E /Y /I dist\* ..\web\ && xcopy /E /Y /I dist\* ..\app\src\main\assets\web\"
+cmd /c "cd test && npm run build && node post-build.cjs && xcopy /E /Y /I dist\* ..\web\ && xcopy /E /Y /I dist\* ..\app\app\src\main\assets\dist\"
 ```
 
 ### Paso 4 — Compilar APK Android
@@ -292,7 +292,7 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 [ ] Actualizar CURRENT_VERSION en test/src/main.js
 [ ] Actualizar version.json (raíz) — versión y downloadUrl IONOS
 [ ] Copy-Item version.json web\version.json -Force
-[ ] npm run build + post-build.cjs + xcopy a web/ y assets/web/
+[ ] npm run build + post-build.cjs + xcopy a web/ y app/app/src/main/assets/dist/
 [ ] gradlew.bat assembleRelease
 [ ] Copy-Item app-release.apk → app\sismos-venezuela.apk
 [ ] Subir sismos-venezuela.apk a IONOS via SSH stdin
