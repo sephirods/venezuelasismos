@@ -1,7 +1,7 @@
 import geojsonData from './venezuela.json';
 
 // --- VARIABLES DE ESTADO ---
-const CURRENT_VERSION = "1.0.0"; // Versión actual de la app
+const CURRENT_VERSION = "1.1.0"; // Versión actual de la app
 let map;
 let earthquakes = []; // Datos de la API de USGS
 let simulatedEarthquakes = []; // Datos simulados por el usuario
