@@ -3,18 +3,39 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782468840786
+    "generated": 1782468854283
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "funvisis-1782467760000-1025--6843",
+      "properties": {
+        "mag": 2.8,
+        "place": "36. km al sureste de San Felipe",
+        "time": 1782467760000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 2.8 - 36. km al sureste de San Felipe",
+        "isFunvisis": true,
+        "depth": 35.2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.43,
+          10.25,
+          35.2
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "funvisis-1782465780000-1062--6678",
       "properties": {
         "mag": 2.5,
-        "place": "4 km al oeste de Naiguata",
+        "place": "4. km al oeste de Naiguata",
         "time": 1782465780000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.5 - 4 km al oeste de Naiguata",
+        "title": "M 2.5 - 4. km al oeste de Naiguata",
         "isFunvisis": true,
         "depth": 8.9
       },
@@ -53,10 +74,10 @@
       "id": "funvisis-1782463620000-1057--6747",
       "properties": {
         "mag": 2.7,
-        "place": "38 km al noreste de Maracay",
+        "place": "38. km al noreste de Maracay",
         "time": 1782463620000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.7 - 38 km al noreste de Maracay",
+        "title": "M 2.7 - 38. km al noreste de Maracay",
         "isFunvisis": true,
         "depth": 1.6
       },
@@ -95,10 +116,10 @@
       "id": "funvisis-1782462660000-1062--6683",
       "properties": {
         "mag": 2.7,
-        "place": "9 km al oeste de Naiguata",
+        "place": "9. km al oeste de Naiguata",
         "time": 1782462660000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.7 - 9 km al oeste de Naiguata",
+        "title": "M 2.7 - 9. km al oeste de Naiguata",
         "isFunvisis": true,
         "depth": 5.8
       },
@@ -116,10 +137,10 @@
       "id": "funvisis-1782461640000-1059--6858",
       "properties": {
         "mag": 3.6,
-        "place": "33 km al noreste de San Felipe",
+        "place": "33. km al noreste de San Felipe",
         "time": 1782461640000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.6 - 33 km al noreste de San Felipe",
+        "title": "M 3.6 - 33. km al noreste de San Felipe",
         "isFunvisis": true,
         "depth": 2.9
       },
@@ -179,10 +200,10 @@
       "id": "funvisis-1782459480000-1063--6692",
       "properties": {
         "mag": 3.7,
-        "place": "2 km al noreste de La Guaira",
+        "place": "2. km al noreste de La Guaira",
         "time": 1782459480000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.7 - 2 km al noreste de La Guaira",
+        "title": "M 3.7 - 2. km al noreste de La Guaira",
         "isFunvisis": true,
         "depth": 2.2
       },
@@ -200,10 +221,10 @@
       "id": "funvisis-1782457680000-1097--6561",
       "properties": {
         "mag": 3.4,
-        "place": "32 km al oeste de Isla la Tortuga",
+        "place": "32. km al oeste de Isla la Tortuga",
         "time": 1782457680000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.4 - 32 km al oeste de Isla la Tortuga",
+        "title": "M 3.4 - 32. km al oeste de Isla la Tortuga",
         "isFunvisis": true,
         "depth": 19.8
       },
@@ -242,10 +263,10 @@
       "id": "funvisis-1782451800000-1053--6856",
       "properties": {
         "mag": 3.8,
-        "place": "29 km al noreste de San Felipe",
+        "place": "29. km al noreste de San Felipe",
         "time": 1782451800000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.8 - 29 km al noreste de San Felipe",
+        "title": "M 3.8 - 29. km al noreste de San Felipe",
         "isFunvisis": true,
         "depth": 7.6
       },
@@ -284,10 +305,10 @@
       "id": "funvisis-1782451020000-1063--6720",
       "properties": {
         "mag": 2.6,
-        "place": "30 km al oeste de La Guaira",
+        "place": "30. km al oeste de La Guaira",
         "time": 1782451020000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.6 - 30 km al oeste de La Guaira",
+        "title": "M 2.6 - 30. km al oeste de La Guaira",
         "isFunvisis": true,
         "depth": 5.0
       },
@@ -305,10 +326,10 @@
       "id": "funvisis-1782449100000-1064--6670",
       "properties": {
         "mag": 3.2,
-        "place": "4 km al noreste de Naiguata",
+        "place": "4. km al noreste de Naiguata",
         "time": 1782449100000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.2 - 4 km al noreste de Naiguata",
+        "title": "M 3.2 - 4. km al noreste de Naiguata",
         "isFunvisis": true,
         "depth": 6.5
       },
@@ -326,10 +347,10 @@
       "id": "funvisis-1782447540000-1054--6856",
       "properties": {
         "mag": 4.5,
-        "place": "30 km al noreste de San Felipe",
+        "place": "30. km al noreste de San Felipe",
         "time": 1782447540000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 4.5 - 30 km al noreste de San Felipe",
+        "title": "M 4.5 - 30. km al noreste de San Felipe",
         "isFunvisis": true,
         "depth": 9.2
       },
@@ -368,10 +389,10 @@
       "id": "funvisis-1782446580000-1022--6431",
       "properties": {
         "mag": 3.5,
-        "place": "30 km al suroeste de Cumana",
+        "place": "30. km al suroeste de Cumana",
         "time": 1782446580000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.5 - 30 km al suroeste de Cumana",
+        "title": "M 3.5 - 30. km al suroeste de Cumana",
         "isFunvisis": true,
         "depth": 88.0
       },
@@ -389,10 +410,10 @@
       "id": "funvisis-1782446400000-1062--6678",
       "properties": {
         "mag": 3.1,
-        "place": "5 km al oeste de Naiguata",
+        "place": "5. km al oeste de Naiguata",
         "time": 1782446400000,
         "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.1 - 5 km al oeste de Naiguata",
+        "title": "M 3.1 - 5. km al oeste de Naiguata",
         "isFunvisis": true,
         "depth": 5.1
       },
@@ -402,27 +423,6 @@
           -66.78,
           10.62,
           5.1
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782444780000-1058--6726",
-      "properties": {
-        "mag": 3.2,
-        "place": "35 km al noroeste de Los Teques",
-        "time": 1782444780000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.2 - 35 km al noroeste de Los Teques",
-        "isFunvisis": true,
-        "depth": 5.0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -67.26,
-          10.58,
-          5.0
         ]
       }
     }
