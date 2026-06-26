@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instalación de Sismología Venezuela - Guía para Android</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-app: #090b10;
+      --bg-card: #0f131a;
+      --bg-step: #151b26;
+      --border-color: #242c3c;
+      --text-primary: #f0f3f8;
+      --text-secondary: #8a96a8;
+      --text-muted: #5e6b7e;
+      --accent-red: #ff3b30;
+      --accent-green: #34c759;
+      --accent-blue: #007aff;
+      --font-family-title: 'Outfit', sans-serif;
+      --font-family-body: 'Inter', sans-serif;
+      --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--font-family-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    /* Enlace de volver */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      transition: color var(--transition-fast);
+      align-self: flex-start;
+    }
+
+    .back-btn:hover {
+      color: var(--accent-red);
+    }
+
+    .back-btn svg {
+      width: 18px;
+      height: 18px;
+      transition: transform var(--transition-fast);
+    }
+
+    .back-btn:hover svg {
+      transform: translateX(-4px);
+    }
+
+    /* Encabezado */
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-container {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      background: rgba(255, 59, 48, 0.1);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 59, 48, 0.25);
+      color: var(--accent-red);
+      margin-bottom: 16px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      animation: pulse-logo 2s infinite alternate;
+    }
+
+    @keyframes pulse-logo {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      100% { transform: scale(1.05); opacity: 1; }
+    }
+
+    h1 {
+      font-family: var(--font-family-title);
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Contenido Principal (Card) */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Pasos */
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .step:last-of-type {
+      border-bottom: none;
+      padding-bottom: 8px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      background-color: rgba(0, 122, 255, 0.1);
+      border: 1px solid rgba(0, 122, 255, 0.25);
+      color: var(--accent-blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-family: var(--font-family-title);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .step-desc {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .step-desc strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Imágenes de ayuda */
+    .step-img-container {
+      background: #090b10;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 8px;
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .step-img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      transition: transform var(--transition-normal);
+    }
+
+    .step-img:hover {
+      transform: scale(1.02);
+    }
+
+    /* Alerta informativa */
+    .warning-box {
+      background: rgba(255, 149, 0, 0.05);
+      border: 1px solid rgba(255, 149, 0, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .warning-icon {
+      color: #ff9500;
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    .warning-text {
+      font-size: 0.82rem;
+      color: #ff9500;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    /* Botón de descarga principal */
+    .download-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .btn-download {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+      background-color: var(--accent-red);
+      color: #ffffff;
+      border: none;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-family: var(--font-family-title);
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 10px 20px rgba(255, 59, 48, 0.3);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-download:hover {
+      background-color: #ff453a;
+      box-shadow: 0 12px 25px rgba(255, 59, 48, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn-download:active {
+      transform: translateY(0);
+    }
+
+    .btn-download svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .download-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      color: var(--accent-red);
+    }
+
+    /* Responsivo para móviles */
+    @media (max-width: 480px) {
+      body {
+        padding: 16px 12px;
+      }
+      .card {
+        padding: 20px 16px;
+        gap: 20px;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .step-title {
+        font-size: 1rem;
+      }
+      .btn-download {
+        padding: 14px 20px;
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Enlace de volver al mapa -->
+    <a href="index.html" class="back-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Volver al Mapa
+    </a>
+
+    <!-- Encabezado de la Guía -->
+    <header>
+      <div class="logo-container">
+        <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M19.07 4.93a10 10 0 0 0-14.14 0M16.24 7.76a6 6 0 0 0-8.49 0M12 12v.01"></path>
+          <circle cx="12" cy="12" r="1"></circle>
+        </svg>
+      </div>
+      <h1>Instalación de Sismología VE</h1>
+      <span class="subtitle">Guía de instalación paso a paso para Android</span>
+    </header>
+
+    <!-- Contenedor del Tutorial -->
+    <main class="card">
+      
+      <!-- Paso 1 -->
+      <section class="step">
+        <div class="step-header">
+          <span class="step-number">1</span>
+          <h2 class="step-title">Descarga el archivo APK</h2>
+        </div>
+        <p class="step-desc">
+          Haz clic en el botón rojo <strong>"Descargar Aplicación"</strong> que encontrarás al final de esta página. El sistema te preguntará si deseas descargar el archivo. Confirma la descarga de forma segura.
+        </p>
+      </section>
+
+      <!-- Paso 2 -->
+      <section class="step">
+        <div class="step-header">
+          <span class="step-number">2</span>
+          <h2 class="step-title">Permite la instalación desde el navegador</h2>
+        </div>
+        <p class="step-desc">
+          Al abrir el archivo, tu teléfono Android podría indicar que tu navegador no tiene permisos para instalar apps de origen desconocido. Presiona en <strong>"Ajustes"</strong> o <strong>"Configuración"</strong> y activa la opción <strong>"Permitir de esta fuente"</strong> (o "Autorizar de esta fuente").
+        </p>
+        <div class="step-img-container">
+          <img class="step-img" src="https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/unknown_sources_guide.png" alt="Configuración de Orígenes Desconocidos en Android" width="560" height="280">
+        </div>
+      </section>
+
+      <!-- Paso 3 -->
+      <section class="step">
+        <div class="step-header">
+          <span class="step-number">3</span>
+          <h2 class="step-title">Cómo omitir la alerta de Play Protect</h2>
+        </div>
+        <p class="step-desc">
+          Google Play Protect detectará que es una aplicación compilada localmente y no registrada en su tienda, mostrando la pantalla: <strong>"Bloqueada por Play Protect"</strong>.
+        </p>
+        
+        <div class="warning-box">
+          <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <div class="warning-text">
+            <strong>IMPORTANTE:</strong> Para instalarla, debes presionar en <strong>"Más detalles"</strong> (ubicado en la esquina inferior izquierda) y luego presionar el botón <strong>"Instalar de todas formas"</strong>.
+          </div>
+        </div>
+
+        <div class="step-img-container">
+          <img class="step-img" src="https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/play_protect_bypass_guide.png" alt="Omitir Advertencia de Play Protect" width="560" height="280">
+        </div>
+      </section>
+
+      <!-- Botón de Descarga final -->
+      <section class="download-area">
+        <a href="https://www.dropbox.com/scl/fi/sifpjpur2i11hfjt3uojj/app-venezuela.apk?rlkey=6fvpw7x26lyl1fy3k5qjfx0qv&st=rciw6wp3&raw=1" class="btn-download">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Descargar Aplicación (APK)
+        </a>
+        <span class="download-note">Descarga segura y directa de SismologíaVE.apk (~161 MB)</span>
+      </section>
+
+    </main>
+
+    <!-- Pie de página -->
+    <footer>
+      Desarrollado para la detección y monitoreo resiliente en Venezuela.<br>
+      © 2026 SismologíaVE. <a href="index.html">Volver al Mapa</a>
+    </footer>
+
+  </div>
+
+</body>
+</html>
