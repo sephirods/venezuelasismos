@@ -198,7 +198,7 @@ class EarthquakeMonitorService : Service() {
     return NotificationCompat.Builder(this, CHANNEL_MONITOR_ID)
       .setSmallIcon(android.R.drawable.stat_sys_warning)
       .setContentTitle("🌎 SismologíaVE activo")
-      .setContentText("Monitoreando sismos cada 60 segundos")
+      .setContentText("Monitoreando sismos")
       .setContentIntent(pendingIntent)
       .setPriority(NotificationCompat.PRIORITY_LOW)
       .setOngoing(true) // No se puede deslizar para cerrar
