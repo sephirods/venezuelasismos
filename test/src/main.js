@@ -1,7 +1,7 @@
 import geojsonData from './venezuela.json';
 
 // --- VARIABLES DE ESTADO ---
-const CURRENT_VERSION = "1.1.1"; // Versión actual de la app
+const CURRENT_VERSION = "1.1.2"; // Versión actual de la app
 let map;
 let earthquakes = []; // Datos de la API de USGS
 let simulatedEarthquakes = []; // Datos simulados por el usuario
@@ -1418,7 +1418,7 @@ async function checkForUpdates() {
   if (!isNativeApp && !forceCheck) return;
 
   try {
-    const response = await fetch(`https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/version.json?t=${Date.now()}`);
+    const response = await fetch(`https://forjadigitales.com/version.json?t=${Date.now()}`);
     if (!response.ok) return;
     const data = await response.json();
     
