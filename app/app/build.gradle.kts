@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.sismologavenezuela"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.1.7"
+        versionCode = 10
+        versionName = "1.1.8"
     }
 
     signingConfigs {
