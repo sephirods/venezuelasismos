@@ -1,0 +1,42 @@
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Android
+.gradle/
+build/
+capture/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+android-app/app/local.properties
+android-app/.gradle/
+android-app/app/.gradle/
+android-app/.navigation/
+android-app/app/buildOutputs/
+*.apk
+*.aar
+*.jar
