@@ -86,54 +86,60 @@ class EarthquakeMonitorService : Service() {
   private fun checkForEarthquakes() {
     val tz = TimeZone.getTimeZone("UTC")
     val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply { timeZone = tz }
-    // Buscar últimas 2 horas (más eficiente que 24h y suficiente para tiempo real)
     val starttime = df.format(Date(System.currentTimeMillis() - 2 * 60 * 60 * 1000))
 
-    val url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson" +
+    val emscUrl = "https://www.seismicportal.eu/fdsnws/event/1/query?format=json" +
+        "&minlat=0.0&maxlat=16.0&minlon=-74.0&maxlon=-58.0" +
+        "&starttime=$starttime"
+
+    val usgsUrl = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson" +
         "&minlatitude=0.0&maxlatitude=16.0&minlongitude=-74.0&maxlongitude=-58.0" +
         "&starttime=$starttime"
 
-    val conn = URL(url).openConnection() as HttpURLConnection
-    conn.requestMethod = "GET"
-    conn.connectTimeout = 10000
-    conn.readTimeout = 10000
+    val emscSismos = fetchFromUrl(emscUrl, isEmsc = true)
+    val usgsSismos = fetchFromUrl(usgsUrl, isEmsc = false)
 
-    if (conn.responseCode != 200) {
-      Log.w(TAG, "USGS HTTP ${conn.responseCode}")
-      conn.disconnect()
-      return
-    }
-
-    val response = InputStreamReader(conn.inputStream).use { it.readText() }
-    conn.disconnect()
-
-    val features = JSONObject(response).optJSONArray("features") ?: return
+    val allSismos = (emscSismos + usgsSismos).sortedBy { it.time }
 
     val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val isFirstRun = !prefs.getBoolean(KEY_FIRST_RUN, false)
     val seenIds = prefs.getStringSet(KEY_SEEN_IDS, emptySet())?.toMutableSet() ?: mutableSetOf()
+    
+    val seenInfoSet = prefs.getStringSet("seen_sismos_info", emptySet()) ?: emptySet()
+    val seenSismosList = seenInfoSet.mapNotNull { str ->
+      val parts = str.split("|")
+      if (parts.size >= 4) {
+        MonitorSismo(
+          id = parts[0],
+          time = parts[1].toLongOrNull() ?: 0L,
+          lat = parts[2].toDoubleOrNull() ?: 0.0,
+          lon = parts[3].toDoubleOrNull() ?: 0.0,
+          mag = 0.0,
+          place = "",
+          source = ""
+        )
+      } else null
+    }.toMutableList()
+
     val newSeenIds = seenIds.toMutableSet()
+    val newSeenSismosList = seenSismosList.toMutableList()
     var notified = 0
 
-    val featureList = (0 until features.length())
-      .map { features.getJSONObject(it) }
-      .sortedBy { it.getJSONObject("properties").optLong("time", 0) }
+    for (sismo in allSismos) {
+      if (seenIds.contains(sismo.id)) continue
+      
+      if (isDuplicate(sismo, newSeenSismosList)) {
+        newSeenIds.add(sismo.id)
+        continue
+      }
 
-    for (feature in featureList) {
-      val id = feature.optString("id").takeIf { it.isNotBlank() } ?: continue
-      if (seenIds.contains(id)) continue
+      newSeenIds.add(sismo.id)
+      newSeenSismosList.add(sismo)
 
-      val props = feature.getJSONObject("properties")
-      val mag = props.optDouble("mag", 0.0)
-      val place = props.optString("place", "Venezuela")
-
-      newSeenIds.add(id)
-
-      // Primera ejecución: solo guardamos IDs sin notificar (evitar spam inicial)
       if (!isFirstRun) {
-        showAlertNotification(id, mag, place)
+        showAlertNotification(sismo.id, sismo.mag, sismo.place, sismo.source)
         notified++
-        Log.d(TAG, "🚨 Nuevo sismo: M$mag - $place")
+        Log.d(TAG, "🚨 Nuevo sismo (${sismo.source}): M${sismo.mag} - ${sismo.place}")
       }
     }
 
@@ -141,12 +147,102 @@ class EarthquakeMonitorService : Service() {
       newSeenIds.toList().takeLast(MAX_SEEN_IDS).toSet()
     else newSeenIds
 
+    val sismosToSave = if (newSeenSismosList.size > MAX_SEEN_IDS)
+      newSeenSismosList.takeLast(MAX_SEEN_IDS)
+    else newSeenSismosList
+
+    val infoSetToSave = sismosToSave.map { "${it.id}|${it.time}|${it.lat}|${it.lon}" }.toSet()
+
     prefs.edit()
       .putStringSet(KEY_SEEN_IDS, idsToSave)
+      .putStringSet("seen_sismos_info", infoSetToSave)
       .putBoolean(KEY_FIRST_RUN, true)
       .apply()
 
     if (notified > 0) Log.d(TAG, "$notified notificaciones enviadas")
+  }
+
+  private fun isDuplicate(sismo: MonitorSismo, list: List<MonitorSismo>): Boolean {
+    for (item in list) {
+      val timeDiff = Math.abs(item.time - sismo.time)
+      val latDiff = Math.abs(item.lat - sismo.lat)
+      val lonDiff = Math.abs(item.lon - sismo.lon)
+      if (timeDiff < 10 * 60 * 1000 && latDiff < 0.5 && lonDiff < 0.5) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private fun fetchFromUrl(urlStr: String, isEmsc: Boolean): List<MonitorSismo> {
+    val list = mutableListOf<MonitorSismo>()
+    var conn: HttpURLConnection? = null
+    try {
+      val url = URL(urlStr)
+      conn = url.openConnection() as HttpURLConnection
+      conn.requestMethod = "GET"
+      conn.connectTimeout = 10000
+      conn.readTimeout = 10000
+
+      if (conn.responseCode != 200) {
+        Log.w(TAG, "${if (isEmsc) "EMSC" else "USGS"} HTTP ${conn.responseCode}")
+        return emptyList()
+      }
+
+      val response = InputStreamReader(conn.inputStream).use { it.readText() }
+      val features = JSONObject(response).optJSONArray("features") ?: return emptyList()
+
+      for (i in 0 until features.length()) {
+        val feature = features.getJSONObject(i)
+        val props = feature.optJSONObject("properties") ?: continue
+        
+        val id = feature.optString("id").takeIf { it.isNotBlank() }
+          ?: props.optString("unid").takeIf { it.isNotBlank() }
+          ?: continue
+
+        val mag = props.optDouble("mag", 0.0)
+        
+        val place = if (isEmsc) {
+          props.optString("flynn_region", "Venezuela")
+        } else {
+          props.optString("place", "Venezuela")
+        }
+
+        val timeMs = if (isEmsc) {
+          val timeStr = props.optString("time")
+          try {
+            val dfIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
+              timeZone = TimeZone.getTimeZone("UTC")
+            }
+            dfIso.parse(timeStr.substring(0, 19))?.time ?: System.currentTimeMillis()
+          } catch (e: Exception) {
+            System.currentTimeMillis()
+          }
+        } else {
+          props.optLong("time", System.currentTimeMillis())
+        }
+
+        val geom = feature.optJSONObject("geometry") ?: continue
+        val coords = geom.optJSONArray("coordinates") ?: continue
+        if (coords.length() < 2) continue
+        val lon = coords.optDouble(0)
+        val lat = coords.optDouble(1)
+
+        val source = if (isEmsc) {
+          val auth = props.optString("auth").takeIf { it.isNotBlank() } ?: "EMSC"
+          "$auth (Preliminar)"
+        } else {
+          "USGS"
+        }
+
+        list.add(MonitorSismo(id, mag, place, timeMs, lat, lon, source))
+      }
+    } catch (e: Exception) {
+      Log.e(TAG, "Error consultando ${if (isEmsc) "EMSC" else "USGS"}: ${e.message}")
+    } finally {
+      conn?.disconnect()
+    }
+    return list
   }
 
   // ─── Notificaciones ────────────────────────────────────────────────────────
@@ -206,7 +302,7 @@ class EarthquakeMonitorService : Service() {
       .build()
   }
 
-  private fun showAlertNotification(id: String, mag: Double, place: String) {
+  private fun showAlertNotification(id: String, mag: Double, place: String, source: String) {
     val intent = Intent(this, MainActivity::class.java).apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
       putExtra("event_id", id)
@@ -234,7 +330,7 @@ class EarthquakeMonitorService : Service() {
       .setContentTitle(title)
       .setContentText("📍 $place")
       .setStyle(NotificationCompat.BigTextStyle()
-        .bigText("📍 $place\n📊 Magnitud $magStr • Fuente: USGS")
+        .bigText("📍 $place\n📊 Magnitud $magStr • Fuente: $source")
         .setBigContentTitle(title))
       .setPriority(NotificationCompat.PRIORITY_MAX) // Máxima prioridad
       .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -253,3 +349,13 @@ class EarthquakeMonitorService : Service() {
     }
   }
 }
+
+data class MonitorSismo(
+  val id: String,
+  val mag: Double,
+  val place: String,
+  val time: Long,
+  val lat: Double,
+  val lon: Double,
+  val source: String
+)

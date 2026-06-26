@@ -1528,7 +1528,7 @@ let emscReconnectTimeout = null;
 
 function initEMSCWebSocket() {
   const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
-  if (isNativeApp) return; // No WebSocket in native Android app
+  // Enable WebSockets in native app too for real-time updates when open
   
   if (emscWs) {
     try { emscWs.close(); } catch (e) {}
