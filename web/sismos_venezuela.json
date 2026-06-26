@@ -3,9 +3,30 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782477260104
+    "generated": 1782477315788
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "funvisis-1782475200000-938--6872",
+      "properties": {
+        "mag": 2.8,
+        "place": "34 km al suroeste de San Carlos",
+        "time": 1782475200000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 2.8 - 34 km al suroeste de San Carlos",
+        "isFunvisis": true,
+        "depth": 1.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.72,
+          9.38,
+          1.0
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "funvisis-1782472020000-1065--6676",
@@ -402,27 +423,6 @@
           -66.71,
           10.64,
           6.5
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782447540000-1054--6856",
-      "properties": {
-        "mag": 4.5,
-        "place": "30 km al noreste de San Felipe",
-        "time": 1782447540000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 4.5 - 30 km al noreste de San Felipe",
-        "isFunvisis": true,
-        "depth": 9.2
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -68.56,
-          10.54,
-          9.2
         ]
       }
     }
