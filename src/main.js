@@ -336,22 +336,50 @@ function processEarthquakes(newFeatures, isInitialLoad = false) {
   sortedNewFeatures.forEach(feature => {
     const id = feature.id;
     
-    // Si es un sismo nuevo que no estaba en nuestra base de datos conocida
-    if (knownEventIds.has(id) || isDuplicate(feature, earthquakes)) {
+    // Si es un sismo nuevo o si es una actualización oficial de uno preliminar existente
+    let existingPrelimIdx = -1;
+    if (isDuplicate(feature, earthquakes)) {
+      // Buscar si el sismo duplicado existente es preliminar y el entrante es oficial
+      existingPrelimIdx = earthquakes.findIndex(item => {
+        const timeDiff = Math.abs(item.properties.time - feature.properties.time);
+        const latDiff = Math.abs(item.geometry.coordinates[1] - feature.geometry.coordinates[1]);
+        const lonDiff = Math.abs(item.geometry.coordinates[0] - feature.geometry.coordinates[0]);
+        const match = timeDiff < 10 * 60 * 1000 && latDiff < 0.5 && lonDiff < 0.5;
+        return match && item.properties.isPreliminary && !feature.properties.isPreliminary;
+      });
+    }
+    
+    if (knownEventIds.has(id) || (isDuplicate(feature, earthquakes) && existingPrelimIdx === -1)) {
       if (!knownEventIds.has(id)) {
         knownEventIds.add(id);
       }
       return;
     }
     
-    knownEventIds.add(id);
-    earthquakes.push(feature);
-    addedAny = true;
-    
-    // Si NO es la carga inicial y ya terminó la inicialización de la app, es un evento en tiempo real
-    if (!isInitialLoad && !isAppInitializing) {
-      hasNewLiveEvent = true;
-      triggerRealTimeAlert(feature);
+    if (existingPrelimIdx !== -1) {
+      const oldId = earthquakes[existingPrelimIdx].id;
+      console.log(`Reemplazando sismo preliminar ${oldId} por oficial ${id}`);
+      
+      // Eliminar el marcador anterior del mapa
+      if (activeMarkers[oldId]) {
+        map.removeLayer(activeMarkers[oldId]);
+        delete activeMarkers[oldId];
+      }
+      
+      // Reemplazar en el listado
+      earthquakes[existingPrelimIdx] = feature;
+      knownEventIds.add(id);
+      addedAny = true;
+    } else {
+      knownEventIds.add(id);
+      earthquakes.push(feature);
+      addedAny = true;
+      
+      // Si NO es la carga inicial y ya terminó la inicialización de la app, es un evento en tiempo real
+      if (!isInitialLoad && !isAppInitializing) {
+        hasNewLiveEvent = true;
+        triggerRealTimeAlert(feature);
+      }
     }
   });
 
@@ -413,12 +441,28 @@ function triggerRealTimeAlert(feature, isSimulated = false) {
     selectEvent(feature.id);
   }, 1500);
   
+  // 4.5. Mostrar Toast visual en la pantalla
+  const isPreliminary = feature.properties.isPreliminary;
+  const auth = feature.properties.auth || 'EMSC';
+  if (isPreliminary) {
+    showToast(`⚠️ Sismo PRELIMINAR (${auth.toUpperCase()}): M ${mag.toFixed(1)} - ${place}`, "important");
+  } else if (!isSimulated) {
+    showToast(`🚨 Nuevo sismo confirmado: M ${mag.toFixed(1)} - ${place}`, "important");
+  }
+  
   // 5. Enviar Notificación Push si está activa
   if (shouldNotify && 'Notification' in window && Notification.permission === 'granted') {
-    const title = isSimulated ? `M ${mag.toFixed(1)} - Sismo Simulado` : `M ${mag.toFixed(1)} - ¡Nuevo Sismo en Venezuela!`;
+    let title = isSimulated ? `M ${mag.toFixed(1)} - Sismo Simulado` : `M ${mag.toFixed(1)} - ¡Nuevo Sismo en Venezuela!`;
+    let body = place;
+    
+    if (isPreliminary && !isSimulated) {
+      title = `⚠️ M ${mag.toFixed(1)} - Sismo PRELIMINAR (${auth.toUpperCase()})`;
+      body = `${place} (Detectado automáticamente, sujeto a revisión)`;
+    }
+    
     try {
       new Notification(title, {
-        body: place,
+        body: body,
         icon: "https://earthquake.usgs.gov/favicon.ico",
         tag: feature.id // Evita notificaciones duplicadas para el mismo sismo
       });
@@ -594,12 +638,12 @@ function renderList(events) {
   listEl.innerHTML = '';
   
   events.forEach(event => {
-    const { mag, place, time, isSimulated, isFunvisis } = event.properties;
+    const { mag, place, time, isSimulated, isFunvisis, isPreliminary, auth } = event.properties;
     const depth = event.geometry.coordinates[2];
     const cat = getMagCategory(mag);
     
     const card = document.createElement('div');
-    card.className = `eq-card border-${cat} ${event.id === selectedEventId ? 'active' : ''} ${isSimulated ? 'simulated' : ''} ${isFunvisis ? 'funvisis-event' : ''}`;
+    card.className = `eq-card border-${cat} ${event.id === selectedEventId ? 'active' : ''} ${isSimulated ? 'simulated' : ''} ${isFunvisis ? 'funvisis-event' : ''} ${isPreliminary ? 'preliminary-event' : ''}`;
     card.dataset.id = event.id;
     
     // Formatear fecha en Venezuela (VET)
@@ -626,6 +670,7 @@ function renderList(events) {
           <span class="eq-tag">M: ${event.geometry.coordinates[1].toFixed(2)}, ${event.geometry.coordinates[0].toFixed(2)}</span>
           ${isSimulated ? '<span class="eq-tag-sim">SIMULADO</span>' : ''}
           ${isFunvisis ? '<span class="eq-tag-funvisis">FUNVISIS</span>' : ''}
+          ${isPreliminary ? `<span class="eq-tag-preliminary">${(auth || 'AUTOMÁTICO').toUpperCase()} - PRELIMINAR</span>` : ''}
         </div>
       </div>
     `;
@@ -688,7 +733,7 @@ function renderMapMarkers(events) {
   events.forEach(event => {
     const id = event.id;
     const [lon, lat, depth] = event.geometry.coordinates;
-    const { mag, place, time, url, isSimulated, isFunvisis } = event.properties;
+    const { mag, place, time, url, isSimulated, isFunvisis, isPreliminary, auth } = event.properties;
     const cat = getMagCategory(mag);
     const color = getMagColor(mag);
     
@@ -702,10 +747,11 @@ function renderMapMarkers(events) {
     const marker = L.circleMarker([lat, lon], {
       radius: markerRadius,
       fillColor: color,
-      color: '#ffffff',
-      weight: 1.5,
+      color: isPreliminary ? '#ff9500' : '#ffffff',
+      weight: isPreliminary ? 2.5 : 1.5,
+      dashArray: isPreliminary ? '5, 5' : null,
       opacity: 0.8,
-      fillOpacity: 0.6,
+      fillOpacity: isPreliminary ? 0.45 : 0.6,
       eventId: id // Guardamos el ID en las opciones del marcador
     }).addTo(map);
     
@@ -728,6 +774,7 @@ function renderMapMarkers(events) {
           <span class="map-popup-mag mag-${cat}">M ${mag.toFixed(1)}</span>
           ${isSimulated ? '<span class="map-popup-sim-tag">SIMULADO</span>' : ''}
           ${isFunvisis ? '<span class="map-popup-sim-tag" style="background:rgba(0,122,255,0.15);color:var(--accent-blue);border:1px solid rgba(0,122,255,0.3);">FUNVISIS</span>' : ''}
+          ${isPreliminary ? `<span class="map-popup-sim-tag" style="background:rgba(255,149,0,0.15);color:#ff9500;border:1px solid rgba(255,149,0,0.3);">${(auth || 'AUTOMÁTICO').toUpperCase()} PRELIMINAR</span>` : ''}
         </div>
         <div class="map-popup-place">${place}</div>
         <div class="map-popup-row">
@@ -742,7 +789,7 @@ function renderMapMarkers(events) {
           <span>Coordenadas:</span>
           <span>${lat.toFixed(3)}°, ${lon.toFixed(3)}°</span>
         </div>
-        ${isFunvisis ? `<a href="http://www.funvisis.gob.ve/" target="_blank" rel="noopener" class="map-popup-link">Detalles FUNVISIS →</a>` : (!isSimulated ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles USGS →</a>` : '')}
+        ${isFunvisis ? `<a href="http://www.funvisis.gob.ve/" target="_blank" rel="noopener" class="map-popup-link">Detalles FUNVISIS →</a>` : (isPreliminary ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles EMSC →</a>` : (!isSimulated ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles USGS →</a>` : ''))}
       </div>
     `;
     
@@ -1471,6 +1518,130 @@ function initApp() {
   
   // 7. Verificar si hay actualizaciones de la APK
   initUpdateBanner();
+  
+  // 8. Inicializar alertas instantáneas por WebSockets (EMSC)
+  initEMSCWebSocket();
+}
+
+let emscWs = null;
+let emscReconnectTimeout = null;
+
+function initEMSCWebSocket() {
+  const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+  if (isNativeApp) return; // No WebSocket in native Android app
+  
+  if (emscWs) {
+    try { emscWs.close(); } catch (e) {}
+  }
+  
+  console.log('Conectando a SeismicPortal WebSocket (EMSC)...');
+  emscWs = new WebSocket('wss://www.seismicportal.eu/standing_order/websocket');
+  
+  emscWs.onopen = () => {
+    console.log('Conectado a SeismicPortal WebSocket (EMSC) exitosamente.');
+    if (emscReconnectTimeout) {
+      clearTimeout(emscReconnectTimeout);
+      emscReconnectTimeout = null;
+    }
+  };
+  
+  emscWs.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.action !== 'create' && msg.action !== 'update') return;
+      
+      const emscEvent = msg.data;
+      if (!emscEvent || !emscEvent.properties || !emscEvent.geometry) return;
+      
+      const props = emscEvent.properties;
+      const coords = emscEvent.geometry.coordinates; // [lon, lat, depth]
+      
+      if (!coords || coords.length < 2) return;
+      const lon = parseFloat(coords[0]);
+      const lat = parseFloat(coords[1]);
+      const depth = coords.length >= 3 ? parseFloat(coords[2]) : 0.0;
+      
+      // 1. Filtrar geográficamente para Venezuela y alrededores:
+      // Latitud: [0.0, 16.0], Longitud: [-74.0, -58.0]
+      if (lat < 0.0 || lat > 16.0 || lon < -74.0 || lon > -58.0) {
+        return; // Fuera del área de cobertura
+      }
+      
+      const mag = parseFloat(props.mag || 0.0);
+      const place = props.flynn_region || 'Ubicación Desconocida (Costa/Mar)';
+      const timeISO = props.time;
+      const timeMs = timeISO ? new Date(timeISO).getTime() : Date.now();
+      const auth = props.auth || 'EMSC';
+      const unid = props.unid || `emsc-${timeMs}`;
+      
+      // 2. Construir sismo compatible estilo USGS
+      const feature = {
+        type: "Feature",
+        id: `emsc-${unid}`,
+        properties: {
+          mag: mag,
+          place: place,
+          time: timeMs,
+          url: `https://www.seismicportal.eu/eventdetails.html?unid=${unid}`,
+          title: `M ${mag.toFixed(1)} - ${place} (Preliminar)`,
+          isFunvisis: false,
+          isPreliminary: true,
+          auth: auth,
+          depth: depth
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [lon, lat, depth]
+        }
+      };
+      
+      console.log(`[EMSC WebSocket] Sismo preliminar detectado en Venezuela: M ${mag} - ${place} (Autoridad: ${auth})`);
+      
+      // 3. Procesar en el hilo principal
+      processEarthquakes([feature], false);
+      
+    } catch (err) {
+      console.error('Error procesando mensaje de EMSC WebSocket:', err);
+    }
+  };
+  
+  emscWs.onclose = () => {
+    console.warn('Conexión con EMSC WebSocket cerrada. Intentando reconectar en 10 segundos...');
+    if (!emscReconnectTimeout) {
+      emscReconnectTimeout = setTimeout(initEMSCWebSocket, 10000);
+    }
+  };
+  
+  emscWs.onerror = (err) => {
+    console.error('Error en EMSC WebSocket:', err);
+    try { emscWs.close(); } catch (e) {}
+  };
+
+  // Soporte de simulación para pruebas en PC (?mock-emsc)
+  if (window.location.search.includes('mock-emsc')) {
+    setTimeout(() => {
+      console.log('[Mock EMSC] Disparando sismo de prueba desde WebSocket...');
+      const mockEvent = {
+        action: 'create',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [-66.89, 10.61, 10.0]
+          },
+          properties: {
+            mag: 4.8,
+            flynn_region: 'Cerca de la Costa de La Guaira (Mock EMSC)',
+            time: new Date().toISOString(),
+            auth: 'SGC',
+            unid: 'mock-emsc-12345'
+          }
+        }
+      };
+      // Enviar al event handler
+      emscWs.onmessage({ data: JSON.stringify(mockEvent) });
+    }, 5000);
+  }
 }
 
 // Ejecutar cuando se cargue la estructura DOM

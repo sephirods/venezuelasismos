@@ -1737,5 +1737,32 @@ body, html {
   border-color: var(--text-muted);
 }
 
+/* Badge en las tarjetas de sismos preliminares (EMSC / SGC) */
+.eq-tag-preliminary {
+  background: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+  border: 1px solid rgba(255, 149, 0, 0.3);
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+}
 
+/* Tarjetas de sismos preliminares con borde ámbar punteado */
+.eq-card.preliminary-event {
+  border-left: 4px dashed #ff9500 !important;
+  background-color: rgba(255, 149, 0, 0.02);
+}
 
+.eq-card.preliminary-event:hover {
+  border-color: #ff9500;
+  background-color: rgba(255, 149, 0, 0.05);
+}
+
+.eq-card.preliminary-event.active {
+  border-color: #ff9500;
+  background-color: rgba(255, 149, 0, 0.08);
+  box-shadow: 0 0 15px rgba(255, 149, 0, 0.1);
+}
