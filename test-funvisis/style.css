@@ -1,0 +1,49 @@
+@import "../src/style.css";
+
+/* Estilos específicos para el experimento de 3 estados de la campanita */
+
+/* Estado 1: Silenciado (Clase base control-btn sin .active) */
+#notification-toggle-btn {
+  transition: all var(--transition-fast);
+}
+
+/* Estado 2: Solo Importantes (> 4.0 M) - Color Rojo */
+#notification-toggle-btn.active.accent-important {
+  background-color: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(255, 59, 48, 0.4) !important;
+}
+
+/* Estado 3: Todos los sismos (Incluyendo FUNVISIS) - Color Azul */
+#notification-toggle-btn.active.accent-all {
+  background-color: var(--accent-blue) !important;
+  border-color: var(--accent-blue) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+/* Badge en las tarjetas de sismos de FUNVISIS */
+.eq-tag-funvisis {
+  background: rgba(0, 122, 255, 0.15);
+  color: var(--accent-blue);
+  border: 1px solid rgba(0, 122, 255, 0.3);
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* Tarjetas de sismos de FUNVISIS con borde azul sutil */
+.eq-card.funvisis-event {
+  border-left: 4px solid var(--accent-blue);
+}
+.eq-card.funvisis-event:hover {
+  border-color: var(--text-muted);
+}
+.eq-card.funvisis-event.active {
+  border-color: var(--accent-blue);
+  background-color: rgba(0, 122, 255, 0.05);
+  box-shadow: 0 0 15px rgba(0, 122, 255, 0.1);
+}
