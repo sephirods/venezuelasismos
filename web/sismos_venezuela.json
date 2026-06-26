@@ -3,9 +3,72 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782460924651
+    "generated": 1782464172825
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "funvisis-1782462660000-1062--6683",
+      "properties": {
+        "mag": 2.7,
+        "place": "9 km al oeste de Naiguata",
+        "time": 1782462660000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 2.7 - 9 km al oeste de Naiguata",
+        "isFunvisis": true,
+        "depth": 5.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.83,
+          10.62,
+          5.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "funvisis-1782461520000-1054--6739",
+      "properties": {
+        "mag": 2.6,
+        "place": "35 km al norte de La Victoria",
+        "time": 1782461520000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 2.6 - 35 km al norte de La Victoria",
+        "isFunvisis": true,
+        "depth": 5.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.39,
+          10.54,
+          5.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "funvisis-1782459660000-1060--6720",
+      "properties": {
+        "mag": 2.5,
+        "place": "30 km al oeste de La Guaira",
+        "time": 1782459660000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 2.5 - 30 km al oeste de La Guaira",
+        "isFunvisis": true,
+        "depth": 5.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -67.2,
+          10.6,
+          5.0
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "funvisis-1782459480000-1063--6692",
@@ -360,69 +423,6 @@
           -68.47,
           10.49,
           6.9
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782430500000-1059--6675",
-      "properties": {
-        "mag": 2.9,
-        "place": "3 km al suroeste de Naiguata",
-        "time": 1782430500000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.9 - 3 km al suroeste de Naiguata",
-        "isFunvisis": true,
-        "depth": 5.0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -66.75,
-          10.59,
-          5.0
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782428580000-1000--6966",
-      "properties": {
-        "mag": 3.2,
-        "place": "9 km al noroeste de Quibor",
-        "time": 1782428580000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.2 - 9 km al noroeste de Quibor",
-        "isFunvisis": true,
-        "depth": 5.0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -69.66,
-          10.0,
-          5.0
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782426960000-1042--6864",
-      "properties": {
-        "mag": 3.0,
-        "place": "14 km al noreste de San Felipe",
-        "time": 1782426960000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.0 - 14 km al noreste de San Felipe",
-        "isFunvisis": true,
-        "depth": 5.0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -68.64,
-          10.42,
-          5.0
         ]
       }
     }
