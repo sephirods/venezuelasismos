@@ -3,9 +3,30 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782467126274
+    "generated": 1782467168866
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "funvisis-1782465720000-1061--6856",
+      "properties": {
+        "mag": 2.9,
+        "place": "30 km al suroeste de Boca de Aroa",
+        "time": 1782465720000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 2.9 - 30 km al suroeste de Boca de Aroa",
+        "isFunvisis": true,
+        "depth": 5.0
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.56,
+          10.61,
+          5.0
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "funvisis-1782463620000-1057--6747",
@@ -402,27 +423,6 @@
           -66.92,
           10.59,
           2.1
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782440400000-1063--6686",
-      "properties": {
-        "mag": 2.9,
-        "place": "8 km al noreste de La Guaira",
-        "time": 1782440400000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.9 - 8 km al noreste de La Guaira",
-        "isFunvisis": true,
-        "depth": 9.7
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -66.86,
-          10.63,
-          9.7
         ]
       }
     }
