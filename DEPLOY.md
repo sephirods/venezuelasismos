@@ -196,8 +196,8 @@ cmd /c "cd test && npm run build && node post-build.cjs && xcopy /E /Y /I dist\*
 ### Paso 4 — Compilar APK Android
 
 ```powershell
-cmd /c "cd app && gradlew.bat assembleRelease"
-Copy-Item "app\app\build\outputs\apk\release\app-release.apk" "app\sismos-venezuela.apk" -Force
+cmd /c "cd app && gradlew.bat assembleDebug"
+Copy-Item "app\app\build\outputs\apk\debug\app-debug.apk" "app\sismos-venezuela.apk" -Force
 ```
 
 ### Paso 5 — Subir APK y version.json a IONOS
@@ -276,12 +276,15 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 
 ## 9. Errores Frecuentes y Soluciones
 
+> [!WARNING]
+> **NO USAR GIT NI GITHUB**: El repositorio local se encuentra desconectado de GitHub (la carpeta `.git` fue eliminada). Ningún script ni desarrollador de IA debe intentar ejecutar comandos de Git o subir código fuente a GitHub. El despliegue de datos es directo a IONOS y la web la sube el usuario manualmente.
+
 | Error | Causa | Solución |
 |---|---|---|
-| `git push` rechazado | Scraper hizo push mientras trabajabas | `git pull --no-rebase -X ours` → `git push` |
-| SFTP `FileNotFoundError` | SFTP de IONOS tiene root diferente a SSH | Usar método SSH stdin `cat >` |
+| La app sigue pidiendo actualizar tras instalar el nuevo APK | No se incrementó el `versionCode` o se copiaron los assets a la ruta incorrecta | Asegúrate de incrementar el `versionCode` en `app/app/build.gradle.kts` y que los assets web estén en `app/app/src/main/assets/dist/` |
+| SFTP `FileNotFoundError` | SFTP de IONOS tiene root diferente a SSH | Usar método SSH stdin `cat >` (ver sección 5) |
 | App muestra datos viejos | Solo afecta v1.1.1 (usaba GitHub CDN) | v1.1.2+ usa IONOS, no tiene este problema |
-| Banner de update no aparece | version.json de GitHub o IONOS sin actualizar | Actualizar en IONOS + `Copy-Item version.json web\version.json` + push |
+| Banner de update no aparece | version.json de IONOS sin actualizar | Subir el archivo `version.json` corregido a IONOS |
 | Build JS cambia hash del archivo | Vite genera nuevo hash en cada build | Normal — el `index.html` se actualiza automáticamente con el nuevo hash |
 
 ---
@@ -293,12 +296,13 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 [ ] Actualizar version.json (raíz) — versión y downloadUrl IONOS
 [ ] Copy-Item version.json web\version.json -Force
 [ ] npm run build + post-build.cjs + xcopy a web/ y app/app/src/main/assets/dist/
-[ ] gradlew.bat assembleRelease
-[ ] Copy-Item app-release.apk → app\sismos-venezuela.apk
+[ ] Incrementar versionCode en app/app/build.gradle.kts (ej. de 1 a 2)
+[ ] Actualizar versionName en app/app/build.gradle.kts a la nueva versión (ej. "1.1.2")
+[ ] gradlew.bat assembleDebug
+[ ] Copy-Item app-debug.apk → app\sismos-venezuela.apk
 [ ] Subir sismos-venezuela.apk a IONOS via SSH stdin
 [ ] Subir version.json a IONOS via SSH stdin
 [ ] Verificar HTTP 200 en forjadigitales.com/sismos-venezuela.apk
 [ ] Verificar HTTP 200 en forjadigitales.com/version.json
-[ ] git add -A && git commit -m "vX.Y.Z" && git push
 [ ] Decirle al usuario que suba web/ a su servidor
 ```
