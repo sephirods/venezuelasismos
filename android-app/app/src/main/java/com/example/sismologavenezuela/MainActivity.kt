@@ -45,7 +45,11 @@ class MainActivity : ComponentActivity() {
   }
 
   private fun startMonitorService() {
-    EarthquakeMonitorService.start(this)
+    val prefs = getSharedPreferences("EarthquakePrefs", MODE_PRIVATE)
+    val enabled = prefs.getBoolean("notifications_enabled", true)
+    if (enabled) {
+      EarthquakeMonitorService.start(this)
+    }
   }
 }
 

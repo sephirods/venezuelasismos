@@ -847,11 +847,23 @@ function initControls() {
   }
   
   // Inicializar estado del botón de notificaciones
+  const isNative = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+  if (isNative) {
+    notificationsEnabled = AndroidApp.isNotificationsEnabled();
+  }
   updateNotificationBtn();
   
   // Manejador del clic manual en el botón de notificaciones
   if (notifBtn) {
     notifBtn.addEventListener('click', () => {
+      const isNative = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+      if (isNative) {
+        notificationsEnabled = !notificationsEnabled;
+        AndroidApp.setNotificationsEnabled(notificationsEnabled);
+        updateNotificationBtn();
+        return;
+      }
+
       if (!('Notification' in window)) {
         alert('Tu navegador no soporta notificaciones de escritorio.');
         return;
@@ -893,6 +905,8 @@ function initControls() {
   // Solicitar permiso automáticamente en la primera interacción si está en estado 'default'
   if ('Notification' in window && Notification.permission === 'default') {
     const promptOnFirstInteraction = () => {
+      const isNative = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+      if (isNative) return;
       requestNotificationPermission((permission) => {
         if (permission === 'granted') {
           notificationsEnabled = true;

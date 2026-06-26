@@ -17,6 +17,7 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 
 import android.view.ViewGroup
+import com.example.sismologavenezuela.EarthquakeMonitorService
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -76,6 +77,25 @@ fun MainScreen(
         addJavascriptInterface(object {
           @android.webkit.JavascriptInterface
           fun isNativeApp(): Boolean = true
+
+          @android.webkit.JavascriptInterface
+          fun isNotificationsEnabled(): Boolean {
+            val prefs = context.getSharedPreferences("EarthquakePrefs", android.content.Context.MODE_PRIVATE)
+            return prefs.getBoolean("notifications_enabled", true)
+          }
+
+          @android.webkit.JavascriptInterface
+          fun setNotificationsEnabled(enabled: Boolean) {
+            val prefs = context.getSharedPreferences("EarthquakePrefs", android.content.Context.MODE_PRIVATE)
+            prefs.edit().putBoolean("notifications_enabled", enabled).apply()
+            
+            val intent = android.content.Intent(context, EarthquakeMonitorService::class.java)
+            if (enabled) {
+              EarthquakeMonitorService.start(context)
+            } else {
+              context.stopService(intent)
+            }
+          }
         }, "AndroidApp")
 
         post { loadUrl("file:///android_asset/dist/index.html") }
