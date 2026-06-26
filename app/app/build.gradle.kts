@@ -11,8 +11,17 @@ android {
         applicationId = "com.example.sismologavenezuela"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 8
+        versionName = "1.1.6"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("sismos-release.jks")
+            storePassword = "sismosve_pass123"
+            keyAlias = "sismos-key"
+            keyPassword = "sismosve_pass123"
+        }
     }
 
     buildTypes {
@@ -20,7 +29,7 @@ android {
             isMinifyEnabled = false
             isCrunchPngs = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

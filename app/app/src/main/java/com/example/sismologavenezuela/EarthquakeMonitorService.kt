@@ -98,8 +98,9 @@ class EarthquakeMonitorService : Service() {
 
     val emscSismos = fetchFromUrl(emscUrl, isEmsc = true)
     val usgsSismos = fetchFromUrl(usgsUrl, isEmsc = false)
+    val funvisisSismos = fetchFromUrl("https://forjadigitales.com/sismos_venezuela.json", isEmsc = false)
 
-    val allSismos = (emscSismos + usgsSismos).sortedBy { it.time }
+    val allSismos = (emscSismos + usgsSismos + funvisisSismos).sortedBy { it.time }
 
     val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val isFirstRun = !prefs.getBoolean(KEY_FIRST_RUN, false)
@@ -124,6 +125,7 @@ class EarthquakeMonitorService : Service() {
     val newSeenIds = seenIds.toMutableSet()
     val newSeenSismosList = seenSismosList.toMutableList()
     var notified = 0
+    val notificationsState = prefs.getString("notifications_state", "all") ?: "all"
 
     for (sismo in allSismos) {
       if (seenIds.contains(sismo.id)) continue
@@ -137,9 +139,20 @@ class EarthquakeMonitorService : Service() {
       newSeenSismosList.add(sismo)
 
       if (!isFirstRun) {
-        showAlertNotification(sismo.id, sismo.mag, sismo.place, sismo.source)
-        notified++
-        Log.d(TAG, "🚨 Nuevo sismo (${sismo.source}): M${sismo.mag} - ${sismo.place}")
+        val ageMinutes = (System.currentTimeMillis() - sismo.time) / 60000.0
+        if (ageMinutes > 10.0 && sismo.mag < 4.0) {
+          Log.d(TAG, "Sismo antiguo detectado tarde en background (${String.format(Locale.US, "%.1f", ageMinutes)} min), omitiendo alerta: M${sismo.mag} - ${sismo.place}")
+          continue
+        }
+
+        val shouldAlert = (notificationsState == "all") || (notificationsState == "important" && sismo.mag >= 4.0)
+        if (shouldAlert) {
+          showAlertNotification(sismo.id, sismo.mag, sismo.place, sismo.source)
+          notified++
+          Log.d(TAG, "🚨 Nuevo sismo (${sismo.source}): M${sismo.mag} - ${sismo.place}")
+        } else {
+          Log.d(TAG, "Sismo omitido por filtro (Importantes): M${sismo.mag} - ${sismo.place}")
+        }
       }
     }
 
@@ -231,6 +244,8 @@ class EarthquakeMonitorService : Service() {
         val source = if (isEmsc) {
           val auth = props.optString("auth").takeIf { it.isNotBlank() } ?: "EMSC"
           "$auth (Preliminar)"
+        } else if (props.optBoolean("isFunvisis", false)) {
+          "FUNVISIS"
         } else {
           "USGS"
         }

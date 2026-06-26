@@ -62,8 +62,33 @@ class EarthquakeWorker(context: Context, params: WorkerParameters) : CoroutineWo
       conn.disconnect()
 
       // 2. Parsear GeoJSON
-      val features = JSONObject(response).optJSONArray("features") ?: return Result.success()
-      Log.d(TAG, "Sismos encontrados: ${features.length()}")
+      val features = JSONObject(response).optJSONArray("features")
+      
+      // Obtener datos FUNVISIS de IONOS
+      val funvisisFeatures = try {
+        val connF = URL("https://forjadigitales.com/sismos_venezuela.json").openConnection() as HttpURLConnection
+        connF.connectTimeout = 10000
+        connF.readTimeout = 10000
+        if (connF.responseCode == 200) {
+          val resF = BufferedReader(InputStreamReader(connF.inputStream)).use { it.readText() }
+          JSONObject(resF).optJSONArray("features")
+        } else null
+      } catch (e: Exception) {
+        null
+      }
+
+      val mergedList = mutableListOf<JSONObject>()
+      if (features != null) {
+        for (i in 0 until features.length()) {
+          mergedList.add(features.getJSONObject(i))
+        }
+      }
+      if (funvisisFeatures != null) {
+        for (i in 0 until funvisisFeatures.length()) {
+          mergedList.add(funvisisFeatures.getJSONObject(i))
+        }
+      }
+      Log.d(TAG, "Sismos encontrados: ${mergedList.size}")
 
       // 3. Cargar IDs ya vistos (máx 500)
       val prefs = applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -71,11 +96,11 @@ class EarthquakeWorker(context: Context, params: WorkerParameters) : CoroutineWo
       val seenIds = prefs.getStringSet(KEY_SEEN_IDS, emptySet())?.toMutableSet() ?: mutableSetOf()
 
       // 4. Construir lista de sismos, ordenados de más antiguo a más nuevo
-      val featuresList = (0 until features.length()).map { features.getJSONObject(it) }
-        .sortedBy { it.getJSONObject("properties").optLong("time", 0) }
+      val featuresList = mergedList.sortedBy { it.getJSONObject("properties").optLong("time", 0) }
 
       val newSeenIds = seenIds.toMutableSet()
       var notifiedCount = 0
+      val notificationsState = prefs.getString("notifications_state", "all") ?: "all"
 
       // Crear canal de notificaciones ANTES de enviar (solo crea una vez, idempotente)
       createNotificationChannel()
@@ -88,15 +113,27 @@ class EarthquakeWorker(context: Context, params: WorkerParameters) : CoroutineWo
         val props = feature.getJSONObject("properties")
         val mag = props.optDouble("mag", 0.0)
         val place = props.optString("place", "Venezuela")
+        val time = props.optLong("time", System.currentTimeMillis())
 
         newSeenIds.add(id)
 
         // En la PRIMERA ejecución solo registramos los IDs sin notificar
         // (para no mandar spam de todos los sismos de las últimas 24h de golpe)
         if (!isFirstRun) {
-          Log.d(TAG, "Nuevo sismo: M$mag - $place")
-          showNotification(id, mag, place)
-          notifiedCount++
+          val ageMinutes = (System.currentTimeMillis() - time) / 60000.0
+          if (ageMinutes > 10.0 && mag < 4.0) {
+            Log.d(TAG, "Sismo antiguo detectado tarde en Worker (${String.format(Locale.US, "%.1f", ageMinutes)} min), omitiendo alerta: M$mag - $place")
+            continue
+          }
+
+          val shouldAlert = (notificationsState == "all") || (notificationsState == "important" && mag >= 4.0)
+          if (shouldAlert) {
+            Log.d(TAG, "Nuevo sismo: M$mag - $place")
+            showNotification(id, mag, place)
+            notifiedCount++
+          } else {
+            Log.d(TAG, "Sismo omitido por filtro (Importantes): M$mag - $place")
+          }
         }
       }
 
