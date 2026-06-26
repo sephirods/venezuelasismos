@@ -1,7 +1,7 @@
 import geojsonData from './venezuela.json';
 
 // --- VARIABLES DE ESTADO ---
-const CURRENT_VERSION = "1.1.2"; // Versión actual de la app
+const CURRENT_VERSION = "1.1.5"; // Versión actual de la app
 let map;
 let earthquakes = []; // Datos de la API de USGS
 let simulatedEarthquakes = []; // Datos simulados por el usuario
@@ -413,10 +413,10 @@ function triggerRealTimeAlert(feature, isSimulated = false) {
   const mag = feature.properties.mag;
   const place = feature.properties.place;
   
-  // Evitar que sismos antiguos (más de 10 minutos) suenen o parpadeen si llegan tarde (evita tormentas de alertas)
+  // Evitar que sismos antiguos (más de 10 minutos) suenen o parpadeen si llegan tarde (excepto si son >= 4.0)
   const eventTime = feature.properties.time;
   const ageMinutes = (Date.now() - eventTime) / 60000;
-  if (!isSimulated && ageMinutes > 10) {
+  if (!isSimulated && ageMinutes > 10 && mag < 4.0) {
     console.log(`[Alerta] Sismo antiguo detectado tarde (${ageMinutes.toFixed(1)} min), se agrega en silencio`);
     return;
   }
@@ -1110,6 +1110,9 @@ function initControls() {
     } else if (notificationsState === 'off') {
       notificationsState = 'all';
     }
+    if (typeof AndroidApp.setNotificationState === 'function') {
+      AndroidApp.setNotificationState(notificationsState);
+    }
   }
   updateNotificationBtn();
   
@@ -1140,6 +1143,9 @@ function initControls() {
       const isNative = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
       if (isNative) {
         AndroidApp.setNotificationsEnabled(notificationsState !== 'off');
+        if (typeof AndroidApp.setNotificationState === 'function') {
+          AndroidApp.setNotificationState(notificationsState);
+        }
         updateNotificationBtn();
         return;
       }
@@ -1508,6 +1514,20 @@ function initApp() {
     
     if (funvisisEvents) {
       combined = combined.concat(funvisisEvents);
+      
+      // Clean up stale Funvisis events from localStorage cache (deleted events, fake tests, etc.)
+      const newFunvisisIds = new Set(funvisisEvents.map(e => e.id));
+      const beforeLength = earthquakes.length;
+      earthquakes = earthquakes.filter(e => {
+        if (e.id && e.id.startsWith('funvisis-')) {
+          return newFunvisisIds.has(e.id);
+        }
+        return true;
+      });
+      knownEventIds = new Set(earthquakes.map(e => e.id));
+      if (earthquakes.length !== beforeLength) {
+        console.log(`[Cache] Cleaned ${beforeLength - earthquakes.length} stale Funvisis events from cache.`);
+      }
     }
     
     if (combined.length === 0) {
