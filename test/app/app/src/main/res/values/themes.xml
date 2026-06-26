@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SismologAVenezuela" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Pantalla completa -->
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <!-- Fondo de ventana oscuro — nada blanco/lavanda se filtra detrás del WebView -->
+        <item name="android:windowBackground">#090b10</item>
+        <item name="android:colorBackground">#090b10</item>
+        <item name="android:statusBarColor">#090b10</item>
+        <item name="android:navigationBarColor">#090b10</item>
+    </style>
+</resources>

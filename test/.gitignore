@@ -1,0 +1,38 @@
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Android (nested test app)
+app/.gradle/
+app/build/
+app/app/build/
+app/local.properties
+app/app/local.properties
+app/.navigation/
+app/app/buildOutputs/
+*.apk
+*.aar
+*.jar

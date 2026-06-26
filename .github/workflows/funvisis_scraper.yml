@@ -30,7 +30,7 @@ jobs:
         pip install requests
 
     - name: Run scraper
-      run: python scraper/funvisis_scraper.py
+      run: python test/scraper/funvisis_scraper.py
 
     - name: Commit and push changes
       run: |
@@ -38,17 +38,17 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
         # Verificar si hay cambios en el archivo JSON
-        if git diff --quiet public/sismos_venezuela.json; then
+        if git diff --quiet test/public/sismos_venezuela.json; then
           echo "No hay nuevos sismos detectados por FUNVISIS."
         else
           echo "Nuevos sismos detectados. Guardando y commiteando..."
-          git add public/sismos_venezuela.json
+          git add test/public/sismos_venezuela.json
           
           # También copiar a los directorios de la web para mantenerlos sincronizados
-          mkdir -p web test
-          cp public/sismos_venezuela.json web/sismos_venezuela.json
-          cp public/sismos_venezuela.json test/sismos_venezuela.json
-          git add web/sismos_venezuela.json test/sismos_venezuela.json
+          mkdir -p web test/test-funvisis
+          cp test/public/sismos_venezuela.json web/sismos_venezuela.json
+          cp test/public/sismos_venezuela.json test/test-funvisis/sismos_venezuela.json
+          git add web/sismos_venezuela.json test/test-funvisis/sismos_venezuela.json
           
           git commit -m "Update FUNVISIS sismos database [skip ci]"
           git push origin main
