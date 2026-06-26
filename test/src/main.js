@@ -284,20 +284,44 @@ async function fetchEarthquakeData(timeFilter) {
 
 // --- FETCH DE DATOS DESDE NUESTRO ARCHIVO SCRAPED DE FUNVISIS ---
 async function fetchFunvisisData() {
+  const GITHUB_URL = 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json';
+  const LOCAL_URL  = 'sismos_venezuela.json';
+  const CACHE_KEY  = 'funvisis_cache';
+
+  // 1. Intentar GitHub raw (datos frescos, online)
   try {
-    // SIEMPRE usar GitHub raw - el archivo local bundleado no se actualiza automaticamente
-    const url = 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json';
-    // Evitar caché con parámetro de tiempo
-    const response = await fetch(url + `?t=${Date.now()}`);
-    if (!response.ok) {
-      throw new Error("HTTP " + response.status);
+    const response = await fetch(GITHUB_URL + `?t=${Date.now()}`, { signal: AbortSignal.timeout(8000) });
+    if (response.ok) {
+      const data = await response.json();
+      // Guardar en cache local para uso offline
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+      return data.features || [];
     }
-    const data = await response.json();
-    return data.features || [];
-  } catch (error) {
-    console.warn("No se pudo cargar la base de sismos de FUNVISIS:", error.message);
-    return [];
+  } catch (e) {
+    console.warn("Sin conexión o GitHub no disponible, usando respaldo...");
   }
+
+  // 2. Intentar cache de localStorage (ultimo fetch exitoso)
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      console.info("Usando datos cacheados de sismos.");
+      return data.features || [];
+    }
+  } catch(e) {}
+
+  // 3. Ultimo recurso: archivo local bundleado (sin internet, sin cache)
+  try {
+    const response = await fetch(LOCAL_URL + `?t=${Date.now()}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.features || [];
+    }
+  } catch(e) {}
+
+  console.warn("No se pudo cargar datos de sismos de ninguna fuente.");
+  return [];
 }
 
 
