@@ -285,8 +285,27 @@ async function fetchEarthquakeData(timeFilter) {
 // --- FETCH DE DATOS DESDE NUESTRO ARCHIVO SCRAPED DE FUNVISIS ---
 async function fetchFunvisisData() {
   try {
-    const response = await fetch('https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/sismos_venezuela.json');
-    if (!response.ok) throw new Error("HTTP " + response.status);
+    const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+    const isLocalFile = window.location.protocol === 'file:';
+    
+    let url = 'sismos_venezuela.json';
+    if (isNativeApp || isLocalFile) {
+      url = 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/sismos_venezuela.json';
+    }
+    
+    // Evitar caché con parámetro de tiempo
+    const response = await fetch(url + `?t=${Date.now()}`);
+    if (!response.ok) {
+      // Si falla la ruta relativa local en web, intentar fallback a GitHub
+      if (url !== 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/sismos_venezuela.json') {
+        const fallbackResponse = await fetch('https://raw.githubusercontent.com/sephirods/venezuelasismos/main/public/sismos_venezuela.json' + `?t=${Date.now()}`);
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json();
+          return data.features || [];
+        }
+      }
+      throw new Error("HTTP " + response.status);
+    }
     const data = await response.json();
     return data.features || [];
   } catch (error) {
@@ -723,7 +742,7 @@ function renderMapMarkers(events) {
           <span>Coordenadas:</span>
           <span>${lat.toFixed(3)}°, ${lon.toFixed(3)}°</span>
         </div>
-        ${isFunvisis ? `<a href="https://www.funvisis.gob.ve/" target="_blank" rel="noopener" class="map-popup-link">Detalles FUNVISIS →</a>` : (!isSimulated ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles USGS →</a>` : '')}
+        ${isFunvisis ? `<a href="http://www.funvisis.gob.ve/" target="_blank" rel="noopener" class="map-popup-link">Detalles FUNVISIS →</a>` : (!isSimulated ? `<a href="${url}" target="_blank" rel="noopener" class="map-popup-link">Detalles USGS →</a>` : '')}
       </div>
     `;
     
@@ -1064,7 +1083,15 @@ function initControls() {
       }
 
       if (!('Notification' in window)) {
-        alert('Tu navegador no soporta notificaciones de escritorio.');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                      window.location.search.includes('mock-ios');
+        if (isIOS) {
+          const backdrop = document.getElementById('ios-pwa-modal-backdrop');
+          if (backdrop) backdrop.classList.add('show');
+        } else {
+          alert('Tu navegador no soporta notificaciones de escritorio.');
+        }
         notificationsState = 'off';
         updateNotificationBtn();
         return;
@@ -1206,6 +1233,83 @@ function initAndroidDownloadBanner() {
   });
 }
 
+function initIosNotificationBanner() {
+  const banner = document.getElementById('ios-pwa-banner');
+  const closeBtn = document.getElementById('ios-pwa-banner-close-btn');
+  const learnMoreBtn = document.getElementById('ios-pwa-banner-learn-more');
+  const backdrop = document.getElementById('ios-pwa-modal-backdrop');
+  const modalCloseBtn = document.getElementById('ios-pwa-modal-close-btn');
+  const modalFooterBtn = document.getElementById('ios-pwa-modal-footer-btn');
+
+  if (!banner || !backdrop) return;
+
+  // Detectar si es iOS (iPhone/iPad/iPod) o si hay parámetro de pruebas ?mock-ios
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                window.location.search.includes('mock-ios');
+
+  // Detectar si ya está instalado/corriendo en modo standalone (PWA)
+  const isStandalone = window.navigator.standalone === true || 
+                       window.matchMedia('(display-mode: standalone)').matches;
+
+  // Detectar si estamos dentro de la app nativa de Android
+  const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
+
+  // Guardar en localStorage si ya lo cerraron
+  const isDismissed = localStorage.getItem('ios-pwa-banner-dismissed') === 'true';
+
+  // Solo mostrar si es iOS, NO está instalado como PWA, NO es la app nativa de Android y NO ha sido dismissed
+  if (isIOS && !isStandalone && !isNativeApp && !isDismissed) {
+    // Retrasar 2 segundos para dar una buena primera impresión
+    setTimeout(() => {
+      banner.classList.add('show');
+    }, 2000);
+  }
+
+  // Evento de cerrar banner
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      banner.classList.remove('show');
+      localStorage.setItem('ios-pwa-banner-dismissed', 'true');
+    });
+  }
+
+  // Abrir modal explicativo
+  const openModal = () => {
+    backdrop.classList.add('show');
+  };
+
+  const closeModal = () => {
+    backdrop.classList.remove('show');
+  };
+
+  if (learnMoreBtn) {
+    learnMoreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openModal();
+    });
+  }
+
+  // Click en el banner abre el modal (excepto si hacen click en la X de cerrar)
+  banner.addEventListener('click', (e) => {
+    if (closeBtn && (e.target === closeBtn || closeBtn.contains(e.target))) {
+      return;
+    }
+    openModal();
+  });
+
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+  if (modalFooterBtn) modalFooterBtn.addEventListener('click', closeModal);
+  
+  // Cerrar haciendo click en el fondo oscuro
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) {
+      closeModal();
+    }
+  });
+}
+
 function updateConnectionStatus(isOnline) {
   const statusDot = document.querySelector('.connection-status .status-dot');
   const statusText = document.querySelector('.connection-status .status-text');
@@ -1299,6 +1403,9 @@ function initApp() {
   
   // 4.5. Inicializar banner de descarga de Android
   initAndroidDownloadBanner();
+  
+  // 4.6. Inicializar banner e instrucciones de notificaciones para iOS (iPhone/iPad)
+  initIosNotificationBanner();
   
   // 4.8. Cargar sismos desde localStorage si existen para soporte offline inmediato
   isLoading = true;

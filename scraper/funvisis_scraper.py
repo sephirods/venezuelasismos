@@ -41,6 +41,15 @@ def parse_funvisis_to_usgs(funvisis_data):
                 # HLV es UTC-4
                 tz_hlv = timezone(timedelta(hours=-4))
                 dt = dt.replace(tzinfo=tz_hlv)
+                
+                # CORRECCIÓN DE FECHA FUTURA (timezone mixup en FUNVISIS)
+                # Si la hora calculada está en el futuro respecto al momento actual,
+                # significa que mezclaron la fecha UTC (mañana) con la hora local de Venezuela.
+                # Restamos 1 día para corregirlo al día local correcto.
+                now_hlv = datetime.now(tz_hlv)
+                if dt > now_hlv:
+                    dt = dt - timedelta(days=1)
+                    
                 epoch_ms = int(dt.timestamp() * 1000)
                 
             # 6. Crear Feature estilo USGS
@@ -53,7 +62,7 @@ def parse_funvisis_to_usgs(funvisis_data):
                     "mag": mag,
                     "place": place,
                     "time": epoch_ms,
-                    "url": "https://www.funvisis.gob.ve/",
+                    "url": "http://www.funvisis.gob.ve/",
                     "title": f"M {mag:.1f} - {place}",
                     "isFunvisis": True,
                     "depth": depth

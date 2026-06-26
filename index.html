@@ -150,7 +150,7 @@
       </section>
 
       <footer class="sidebar-footer">
-        <p>Datos provistos en tiempo real por la <a href="https://earthquake.usgs.gov/" target="_blank" rel="noopener">USGS</a> y <a href="https://www.funvisis.gob.ve/" target="_blank" rel="noopener">FUNVISIS</a>.</p>
+        <p>Datos provistos en tiempo real por la <a href="https://earthquake.usgs.gov/" target="_blank" rel="noopener">USGS</a> y <a href="http://www.funvisis.gob.ve/" target="_blank" rel="noopener">FUNVISIS</a>.</p>
         <p>Área de monitoreo: Venezuela y alrededores.</p>
         <p class="developer-credit">Desarrollado por <a href="desarrollador.html" style="color: var(--text-primary); text-decoration: none; border-bottom: 1px dashed var(--text-secondary); padding-bottom: 1px; transition: border-color var(--transition-fast);">Juan A. Baez</a></p>
       </footer>
@@ -239,6 +239,51 @@
       <a href="#" id="btn-update-download" class="btn-banner-download" style="background-color: var(--accent-blue); box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);">
         Descargar Update
       </a>
+    </div>
+  </div>
+
+  <!-- Banner de Notificaciones iOS (Solo visible en iOS Safari/Chrome web) -->
+  <div id="ios-pwa-banner" class="ios-pwa-banner">
+    <div class="ios-pwa-banner-content">
+      <div class="ios-pwa-banner-title">
+        <span>🔔</span> Alertas en iPhone
+      </div>
+      <div class="ios-pwa-banner-desc">
+        Recibe avisos de sismos en tu iPhone al instante. <span id="ios-pwa-banner-learn-more">Ver cómo activar</span>
+      </div>
+    </div>
+    <button id="ios-pwa-banner-close-btn" class="ios-pwa-banner-close" title="Cerrar">&times;</button>
+  </div>
+
+  <!-- Modal de Instrucciones iOS PWA -->
+  <div id="ios-pwa-modal-backdrop" class="ios-pwa-modal-backdrop">
+    <div class="ios-pwa-modal">
+      <button id="ios-pwa-modal-close-btn" class="ios-pwa-modal-close" title="Cerrar">&times;</button>
+      <h3 class="ios-pwa-modal-title">Alertas en tu iPhone</h3>
+      <p class="ios-pwa-modal-subtitle">
+        Apple exige guardar la web en la pantalla de inicio para poder enviarte notificaciones automáticas de sismos.
+      </p>
+      <div class="ios-pwa-steps">
+        <div class="ios-pwa-step">
+          <div class="ios-pwa-step-num">1</div>
+          <div class="ios-pwa-step-text">
+            Toca el botón de <strong>Compartir</strong> en Safari <span class="ios-pwa-step-icon">📤</span> (el cuadrado con la flecha hacia arriba).
+          </div>
+        </div>
+        <div class="ios-pwa-step">
+          <div class="ios-pwa-step-num">2</div>
+          <div class="ios-pwa-step-text">
+            Busca y selecciona <strong>"Añadir a pantalla de inicio"</strong> <span class="ios-pwa-step-icon">📲</span>.
+          </div>
+        </div>
+        <div class="ios-pwa-step">
+          <div class="ios-pwa-step-num">3</div>
+          <div class="ios-pwa-step-text">
+            Abre el nuevo icono en tu pantalla de inicio y activa el botón de <strong>Notificaciones</strong> 🔔.
+          </div>
+        </div>
+      </div>
+      <button id="ios-pwa-modal-footer-btn" class="ios-pwa-modal-footer-btn">Entendido</button>
     </div>
   </div>
 

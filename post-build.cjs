@@ -41,13 +41,14 @@ try {
   // 5. Quitar scripts residuales del dev mode de Vite (src/main.js)
   html = html.replace(/<script[^>]+src="[^"]*src\/main\.js"[^>]*><\/script>/g, '');
 
-  // Eliminar el APK del dist — Vite copia todo public/ al dist, incluyendo el APK
-  // Esto haría que el APK (161MB) quede como asset de la app Android
-  const apkInDist = path.join(distDir, 'app-venezuela.apk');
-  if (fs.existsSync(apkInDist)) {
-    fs.unlinkSync(apkInDist);
-    console.log('APK eliminado del dist (no debe ir como asset Android)');
-  }
+  // Eliminar todos los APK del dist — Vite copia todo public/ al dist, incluyendo los APK
+  // Esto evitará que queden como assets de la app Android y en la carpeta web
+  fs.readdirSync(distDir).forEach(file => {
+    if (file.endsWith('.apk')) {
+      fs.unlinkSync(path.join(distDir, file));
+      console.log(`APK eliminado del dist: ${file}`);
+    }
+  });
 
   fs.writeFileSync(htmlPath, html, 'utf8');
 
