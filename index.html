@@ -57,11 +57,21 @@
           </div>
         </div>
         
-        <div class="connection-status">
-          <span class="status-dot online"></span>
-          <span class="status-text">MONITOREANDO EN VIVO</span>
-          <span id="last-updated-label" style="font-size:0.65rem;opacity:0.7;margin-left:6px;color:#4ade80;font-variant-numeric:tabular-nums;"></span>
-          <span class="clock" id="live-clock">--:--:--</span>
+        <div class="connection-status-row" style="display:flex;align-items:center;gap:10px;">
+          <div class="connection-status" style="flex-grow:1;">
+            <span class="status-dot online"></span>
+            <span class="status-text">MONITOREANDO EN VIVO</span>
+            <span id="last-updated-label" style="font-size:0.65rem;opacity:0.7;margin-left:6px;color:#4ade80;font-variant-numeric:tabular-nums;"></span>
+            <span class="clock" id="live-clock">--:--:--</span>
+          </div>
+          
+          <a id="apk-install-small-btn" href="https://github.com/sephirods/venezuelasismos/releases/latest/download/app-venezuela.apk" class="apk-install-small-btn hidden" title="Descargar Aplicación para Android (APK)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </a>
         </div>
 
       </header>

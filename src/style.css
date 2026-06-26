@@ -1378,4 +1378,31 @@ body, html {
   }
 }
 
+/* Botón pequeño de descarga APK (Slick & Non-intrusive) */
+.apk-install-small-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.25);
+  border-radius: 8px;
+  color: var(--accent-red);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.apk-install-small-btn:hover {
+  background: var(--accent-red);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 59, 48, 0.4);
+  transform: scale(1.05);
+}
+
+.apk-install-small-btn.hidden {
+  display: none !important;
+}
+
 

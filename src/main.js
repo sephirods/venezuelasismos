@@ -939,13 +939,15 @@ function initControls() {
 function initAndroidDownloadBanner() {
   const banner = document.getElementById('android-download-banner');
   const closeBtn = document.getElementById('close-banner-btn');
+  const smallBtn = document.getElementById('apk-install-small-btn');
   
   if (!banner || !closeBtn) return;
   
-  // Si estamos dentro de la app nativa (protocolo file o interfaz nativa), ocultamos el banner
+  // Si estamos dentro de la app nativa (protocolo file o interfaz nativa), ocultamos los banners
   const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
   if (window.location.protocol === 'file:' || isNativeApp) {
     banner.classList.add('hidden');
+    if (smallBtn) smallBtn.classList.add('hidden');
     return;
   }
   
@@ -953,7 +955,16 @@ function initAndroidDownloadBanner() {
   const isAndroid = /android/i.test(navigator.userAgent);
   const isMock = window.location.search.includes('mock-android');
   
-  // Comprobar si el usuario ya cerró el banner en esta sesión/navegador
+  // Mostrar el botón pequeño permanente para descargar APK en Android
+  if (smallBtn) {
+    if (isAndroid || isMock) {
+      smallBtn.classList.remove('hidden');
+    } else {
+      smallBtn.classList.add('hidden');
+    }
+  }
+  
+  // Comprobar si el usuario ya cerró el banner grande en esta sesión/navegador
   const isDismissed = localStorage.getItem('android-banner-dismissed') === 'true';
   
   if ((isAndroid || isMock) && !isDismissed) {
