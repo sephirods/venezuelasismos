@@ -284,13 +284,14 @@ async function fetchEarthquakeData(timeFilter) {
 
 // --- FETCH DE DATOS DESDE NUESTRO ARCHIVO SCRAPED DE FUNVISIS ---
 async function fetchFunvisisData() {
-  const GITHUB_URL = 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json';
+  // IONOS: sin caché CDN, datos frescos cada 1 minuto directo del scraper
+  const IONOS_URL  = 'https://forjadigitales.com/sismos_venezuela.json';
   const LOCAL_URL  = 'sismos_venezuela.json';
   const CACHE_KEY  = 'funvisis_cache';
 
-  // 1. Intentar GitHub raw (datos frescos, online)
+  // 1. Intentar IONOS directo (datos frescos cada 1 min, sin caché CDN)
   try {
-    const response = await fetch(GITHUB_URL + `?t=${Date.now()}`, { signal: AbortSignal.timeout(8000) });
+    const response = await fetch(IONOS_URL + `?t=${Date.now()}`, { signal: AbortSignal.timeout(8000) });
     if (response.ok) {
       const data = await response.json();
       // Guardar en cache local para uso offline
