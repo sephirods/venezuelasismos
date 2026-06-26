@@ -45,10 +45,10 @@ jobs:
           git add public/sismos_venezuela.json
           
           # También copiar a los directorios de la web para mantenerlos sincronizados
-          mkdir -p web/app web/test
-          cp public/sismos_venezuela.json web/app/sismos_venezuela.json
-          cp public/sismos_venezuela.json web/test/sismos_venezuela.json
-          git add web/app/sismos_venezuela.json web/test/sismos_venezuela.json
+          mkdir -p web test
+          cp public/sismos_venezuela.json web/sismos_venezuela.json
+          cp public/sismos_venezuela.json test/sismos_venezuela.json
+          git add web/sismos_venezuela.json test/sismos_venezuela.json
           
           git commit -m "Update FUNVISIS sismos database [skip ci]"
           git push origin main
