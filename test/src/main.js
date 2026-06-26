@@ -285,25 +285,11 @@ async function fetchEarthquakeData(timeFilter) {
 // --- FETCH DE DATOS DESDE NUESTRO ARCHIVO SCRAPED DE FUNVISIS ---
 async function fetchFunvisisData() {
   try {
-    const isNativeApp = typeof AndroidApp !== 'undefined' && AndroidApp.isNativeApp();
-    const isLocalFile = window.location.protocol === 'file:';
-    
-    let url = 'sismos_venezuela.json';
-    if (isNativeApp || isLocalFile) {
-      url = 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json';
-    }
-    
+    // SIEMPRE usar GitHub raw - el archivo local bundleado no se actualiza automaticamente
+    const url = 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json';
     // Evitar caché con parámetro de tiempo
     const response = await fetch(url + `?t=${Date.now()}`);
     if (!response.ok) {
-      // Si falla la ruta relativa local en web, intentar fallback a GitHub
-      if (url !== 'https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json') {
-        const fallbackResponse = await fetch('https://raw.githubusercontent.com/sephirods/venezuelasismos/main/web/sismos_venezuela.json' + `?t=${Date.now()}`);
-        if (fallbackResponse.ok) {
-          const data = await fallbackResponse.json();
-          return data.features || [];
-        }
-      }
       throw new Error("HTTP " + response.status);
     }
     const data = await response.json();
@@ -313,6 +299,7 @@ async function fetchFunvisisData() {
     return [];
   }
 }
+
 
 // --- COMPROBAR SI UN SISMO DE FUNVISIS ES DUPLICADO DE UNO DE LA USGS ---
 function isDuplicate(event, list) {
