@@ -3,9 +3,30 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782471314243
+    "generated": 1782471375418
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "funvisis-1782469860000-1056--6850",
+      "properties": {
+        "mag": 3.2,
+        "place": "27 km al suroeste de Boca de Aroa",
+        "time": 1782469860000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 3.2 - 27 km al suroeste de Boca de Aroa",
+        "isFunvisis": true,
+        "depth": 8.7
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.5,
+          10.56,
+          8.7
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "funvisis-1782468900000-1063--6673",
@@ -402,27 +423,6 @@
           -67.29,
           10.61,
           5.0
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782446580000-1022--6431",
-      "properties": {
-        "mag": 3.5,
-        "place": "30 km al suroeste de Cumana",
-        "time": 1782446580000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.5 - 30 km al suroeste de Cumana",
-        "isFunvisis": true,
-        "depth": 88.0
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -64.32,
-          10.22,
-          88.0
         ]
       }
     }
