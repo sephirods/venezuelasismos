@@ -44,10 +44,11 @@ jobs:
           echo "Nuevos sismos detectados. Guardando y commiteando..."
           git add public/sismos_venezuela.json
           
-          # También copiar al directorio web para mantenerlo sincronizado
-          mkdir -p web
-          cp public/sismos_venezuela.json web/sismos_venezuela.json
-          git add web/sismos_venezuela.json
+          # También copiar a los directorios de la web para mantenerlos sincronizados
+          mkdir -p app test
+          cp public/sismos_venezuela.json app/sismos_venezuela.json
+          cp public/sismos_venezuela.json test/sismos_venezuela.json
+          git add app/sismos_venezuela.json test/sismos_venezuela.json
           
           git commit -m "Update FUNVISIS sismos database [skip ci]"
           git push origin main
