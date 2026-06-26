@@ -196,8 +196,8 @@ cmd /c "cd test && npm run build && node post-build.cjs && xcopy /E /Y /I dist\*
 ### Paso 4 — Compilar APK Android
 
 ```powershell
-cmd /c "cd app && gradlew.bat assembleDebug"
-Copy-Item "app\app\build\outputs\apk\debug\app-debug.apk" "app\sismos-venezuela.apk" -Force
+cmd /c "cd app && gradlew.bat assembleRelease"
+Copy-Item "app\app\build\outputs\apk\release\app-release.apk" "app\sismos-venezuela.apk" -Force
 ```
 
 ### Paso 5 — Subir APK y version.json a IONOS
@@ -298,8 +298,8 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 [ ] npm run build + post-build.cjs + xcopy a web/ y app/app/src/main/assets/dist/
 [ ] Incrementar versionCode en app/app/build.gradle.kts (ej. de 1 a 2)
 [ ] Actualizar versionName en app/app/build.gradle.kts a la nueva versión (ej. "1.1.2")
-[ ] gradlew.bat assembleDebug
-[ ] Copy-Item app-debug.apk → app\sismos-venezuela.apk
+[ ] gradlew.bat assembleRelease
+[ ] Copy-Item app-release.apk → app\sismos-venezuela.apk
 [ ] Subir sismos-venezuela.apk a IONOS via SSH stdin
 [ ] Subir version.json a IONOS via SSH stdin
 [ ] Verificar HTTP 200 en forjadigitales.com/sismos-venezuela.apk
