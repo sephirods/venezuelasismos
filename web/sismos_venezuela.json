@@ -3,9 +3,30 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782469516690
+    "generated": 1782469563771
   },
   "features": [
+    {
+      "type": "Feature",
+      "id": "funvisis-1782468900000-1063--6673",
+      "properties": {
+        "mag": 3.0,
+        "place": "2 km al noreste de Naiguata",
+        "time": 1782468900000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 3.0 - 2 km al noreste de Naiguata",
+        "isFunvisis": true,
+        "depth": 4.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.73,
+          10.63,
+          4.8
+        ]
+      }
+    },
     {
       "type": "Feature",
       "id": "funvisis-1782467760000-1025--6843",
@@ -402,27 +423,6 @@
           -64.32,
           10.22,
           88.0
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782446400000-1062--6678",
-      "properties": {
-        "mag": 3.1,
-        "place": "5 km al oeste de Naiguata",
-        "time": 1782446400000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 3.1 - 5 km al oeste de Naiguata",
-        "isFunvisis": true,
-        "depth": 5.1
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -66.78,
-          10.62,
-          5.1
         ]
       }
     }
