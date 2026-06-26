@@ -3,7 +3,7 @@
   "metadata": {
     "title": "FUNVISIS Recientes (Sismología VE)",
     "count": 20,
-    "generated": 1782468541072
+    "generated": 1782468554772
   },
   "features": [
     {
@@ -24,6 +24,27 @@
           -66.78,
           10.62,
           8.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "funvisis-1782465720000-1042--6853",
+      "properties": {
+        "mag": 3.3,
+        "place": "25 km al noreste de San Felipe",
+        "time": 1782465720000,
+        "url": "http://www.funvisis.gob.ve/",
+        "title": "M 3.3 - 25 km al noreste de San Felipe",
+        "isFunvisis": true,
+        "depth": 4.4
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.53,
+          10.42,
+          4.4
         ]
       }
     },
@@ -402,27 +423,6 @@
           -67.26,
           10.58,
           5.0
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "funvisis-1782443160000-1059--6692",
-      "properties": {
-        "mag": 2.4,
-        "place": "2 km al sureste de La Guaira",
-        "time": 1782443160000,
-        "url": "http://www.funvisis.gob.ve/",
-        "title": "M 2.4 - 2 km al sureste de La Guaira",
-        "isFunvisis": true,
-        "depth": 2.1
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -66.92,
-          10.59,
-          2.1
         ]
       }
     }
