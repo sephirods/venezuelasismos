@@ -121,7 +121,7 @@ class EarthquakeWorker(context: Context, params: WorkerParameters) : CoroutineWo
         // (para no mandar spam de todos los sismos de las últimas 24h de golpe)
         if (!isFirstRun) {
           val ageMinutes = (System.currentTimeMillis() - time) / 60000.0
-          if (ageMinutes > 10.0 && mag < 4.0) {
+          if (ageMinutes > 120.0 || (ageMinutes > 10.0 && mag < 4.0)) {
             Log.d(TAG, "Sismo antiguo detectado tarde en Worker (${String.format(Locale.US, "%.1f", ageMinutes)} min), omitiendo alerta: M$mag - $place")
             continue
           }

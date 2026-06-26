@@ -1,7 +1,7 @@
 import geojsonData from './venezuela.json';
 
 // --- VARIABLES DE ESTADO ---
-const CURRENT_VERSION = "1.1.6"; // Versión actual de la app
+const CURRENT_VERSION = "1.1.7"; // Versión actual de la app
 let map;
 let earthquakes = []; // Datos de la API de USGS
 let simulatedEarthquakes = []; // Datos simulados por el usuario
@@ -327,8 +327,22 @@ async function fetchFunvisisData() {
 
 
 // --- COMPROBAR SI UN SISMO DE FUNVISIS ES DUPLICADO DE UNO DE LA USGS ---
+function getSourceType(id) {
+  if (!id) return '';
+  if (id.startsWith('us')) return 'usgs';
+  if (id.startsWith('funvisis')) return 'funvisis';
+  if (id.startsWith('emsc')) return 'emsc';
+  return '';
+}
+
 function isDuplicate(event, list) {
   return list.some(item => {
+    // Si son del mismo origen (por ejemplo, ambos de la USGS o ambos de FUNVISIS) y tienen IDs distintos, NO son duplicados
+    const source1 = getSourceType(item.id);
+    const source2 = getSourceType(event.id);
+    if (source1 && source2 && source1 === source2) {
+      return false;
+    }
     const timeDiff = Math.abs(item.properties.time - event.properties.time);
     const latDiff = Math.abs(item.geometry.coordinates[1] - event.geometry.coordinates[1]);
     const lonDiff = Math.abs(item.geometry.coordinates[0] - event.geometry.coordinates[0]);
@@ -413,10 +427,10 @@ function triggerRealTimeAlert(feature, isSimulated = false) {
   const mag = feature.properties.mag;
   const place = feature.properties.place;
   
-  // Evitar que sismos antiguos (más de 10 minutos) suenen o parpadeen si llegan tarde (excepto si son >= 4.0)
+  // Evitar que sismos antiguos (más de 10 minutos) suenen o parpadeen si llegan tarde (excepto si son >= 4.0 y tienen menos de 120 minutos)
   const eventTime = feature.properties.time;
   const ageMinutes = (Date.now() - eventTime) / 60000;
-  if (!isSimulated && ageMinutes > 10 && mag < 4.0) {
+  if (!isSimulated && (ageMinutes > 120 || (ageMinutes > 10 && mag < 4.0))) {
     console.log(`[Alerta] Sismo antiguo detectado tarde (${ageMinutes.toFixed(1)} min), se agrega en silencio`);
     return;
   }

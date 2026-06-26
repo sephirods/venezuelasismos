@@ -140,7 +140,7 @@ class EarthquakeMonitorService : Service() {
 
       if (!isFirstRun) {
         val ageMinutes = (System.currentTimeMillis() - sismo.time) / 60000.0
-        if (ageMinutes > 10.0 && sismo.mag < 4.0) {
+        if (ageMinutes > 120.0 || (ageMinutes > 10.0 && sismo.mag < 4.0)) {
           Log.d(TAG, "Sismo antiguo detectado tarde en background (${String.format(Locale.US, "%.1f", ageMinutes)} min), omitiendo alerta: M${sismo.mag} - ${sismo.place}")
           continue
         }
@@ -175,8 +175,21 @@ class EarthquakeMonitorService : Service() {
     if (notified > 0) Log.d(TAG, "$notified notificaciones enviadas")
   }
 
+  private fun getSourceType(id: String): String {
+    if (id.startsWith("us")) return "usgs"
+    if (id.startsWith("funvisis")) return "funvisis"
+    if (id.startsWith("emsc")) return "emsc"
+    return ""
+  }
+
   private fun isDuplicate(sismo: MonitorSismo, list: List<MonitorSismo>): Boolean {
     for (item in list) {
+      // Si son del mismo origen (por ejemplo, ambos de la USGS o ambos de FUNVISIS) y tienen IDs distintos, NO son duplicados
+      val source1 = getSourceType(item.id)
+      val source2 = getSourceType(sismo.id)
+      if (source1.isNotEmpty() && source2.isNotEmpty() && source1 == source2) {
+        continue
+      }
       val timeDiff = Math.abs(item.time - sismo.time)
       val latDiff = Math.abs(item.lat - sismo.lat)
       val lonDiff = Math.abs(item.lon - sismo.lon)
