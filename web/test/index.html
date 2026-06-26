@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090b10">
+  <title>Sismología en Vivo (FUNVISIS + USGS) | Monitoreo Sísmico de Venezuela</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Monitoreo sísmico en tiempo real para Venezuela. Visualiza los últimos sismos en un mapa interactivo con notificaciones sonoras y animaciones en tiempo real usando datos del USGS y FUNVISIS.">
+  <!-- Local Leaflet CSS (Offline support) -->
+  <link rel="stylesheet" href="../leaflet/leaflet.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body style="margin:0;padding:0;background:#090b10;">
+<script>
+(function() {
+  // Fix: forzar altura del contenedor usando window.innerHeight real
+  function fixAppHeight(){
+    var h = window.innerHeight || screen.height;
+    var w = window.innerWidth || screen.width;
+    if (h <= 0) h = screen.height;
+    if (w <= 0) w = screen.width;
+    var ac = document.querySelector('.app-container');
+    if (ac) {
+      ac.style.height = h + 'px';
+      ac.style.width = w + 'px';
+    }
+    document.documentElement.style.height = h + 'px';
+    document.body.style.height = h + 'px';
+  }
+  
+  // Ejecutar al cargar la página
+  fixAppHeight();
+  window.addEventListener('resize', fixAppHeight);
+  // Re-ejecutar en DOMContentLoaded para asegurar que .app-container ya existe en el DOM
+  window.addEventListener('DOMContentLoaded', fixAppHeight);
+})();
+</script>
+  <div class="app-container" style="background:#090b10;">
+    <!-- Sidebar izquierdo -->
+    <aside class="sidebar" style="background:#0f131a;color:#e2e8f0;">
+      <header class="sidebar-header">
+        <div class="brand">
+          <div class="icon-pulse-container">
+            <span class="live-pulse"></span>
+            <svg class="icon-radar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19.07 4.93a10 10 0 0 0-14.14 0M16.24 7.76a6 6 0 0 0-8.49 0M12 12v.01"/>
+              <circle cx="12" cy="12" r="1"/>
+            </svg>
+          </div>
+          <div>
+            <h1>SISMOLOGÍA VENEZUELA</h1>
+            <span class="subtitle">Monitoreo Integrado (USGS + FUNVISIS)</span>
+          </div>
+        </div>
+        
+        <div class="connection-status-row" style="display:flex;align-items:center;gap:10px;">
+          <div class="connection-status" style="flex-grow:1;">
+            <span class="status-dot online"></span>
+            <span class="status-text">MONITOREANDO EN VIVO</span>
+            <span id="last-updated-label" style="font-size:0.65rem;opacity:0.7;margin-left:6px;color:#4ade80;font-variant-numeric:tabular-nums;"></span>
+            <span class="clock" id="live-clock">--:--:--</span>
+          </div>
+          
+          <a id="apk-install-small-btn" href="../instalar.html" class="apk-install-small-btn hidden" title="Guía de Instalación para Android (APK)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </a>
+        </div>
+
+      </header>
+
+      <!-- Estadísticas rápidas -->
+      <section class="stats-section">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Últimas 24h</span>
+            <span class="stat-value" id="stat-count-24h">-</span>
+          </div>
+          <div class="stat-card accent-high">
+            <span class="stat-label">Mag. Max (Mes)</span>
+            <span class="stat-value" id="stat-max-mag">-</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Prof. Prom.</span>
+            <span class="stat-value" id="stat-avg-depth">- km</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel de Controles y Filtros -->
+      <section class="controls-section">
+        <div class="control-group">
+          <label for="time-filter" class="control-label">Rango de Tiempo</label>
+          <div class="select-wrapper">
+            <select id="time-filter">
+              <option value="24h">Últimas 24 Horas</option>
+              <option value="7d">Últimos 7 Días</option>
+              <option value="30d" selected>Últimos 30 Días</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="intensity-filter" class="control-label">Intensidad</label>
+          <div class="select-wrapper">
+            <select id="intensity-filter">
+              <option value="all" selected>Todas las Intensidades</option>
+              <option value="low">Leve (&lt; 3.5)</option>
+              <option value="mid">Moderado (3.5 - 4.5)</option>
+              <option value="high">Fuerte (4.5 - 6.0)</option>
+              <option value="severe">Severo (&gt; 6.0)</option>
+            </select>
+          </div>
+        </div>
+
+
+        <div class="control-group">
+          <div class="control-header">
+            <label for="mag-filter" class="control-label">Magnitud Mínima</label>
+            <span class="control-value-display" id="mag-val">0.0 M</span>
+          </div>
+          <div class="slider-wrapper">
+            <input type="range" id="mag-filter" min="0.0" max="7.0" step="0.5" value="0.0">
+            <div class="slider-ticks">
+              <span>0.0</span>
+              <span>2.0</span>
+              <span>4.0</span>
+              <span>6.0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lista de sismos -->
+      <section class="list-section">
+        <div class="list-header">
+          <h2>Sismos Detectados (<span id="total-listed">0</span>)</h2>
+          <button id="reset-filters-btn" class="btn-text">Limpiar Filtros</button>
+        </div>
+        <div class="earthquake-list" id="earthquake-list">
+          <div class="list-placeholder">Cargando eventos sísmicos...</div>
+        </div>
+      </section>
+
+      <footer class="sidebar-footer">
+        <p>Datos provistos en tiempo real por la <a href="https://earthquake.usgs.gov/" target="_blank" rel="noopener">USGS</a> y <a href="https://www.funvisis.gob.ve/" target="_blank" rel="noopener">FUNVISIS</a>.</p>
+        <p>Área de monitoreo: Venezuela y alrededores.</p>
+        <p class="developer-credit">Desarrollado por <a href="desarrollador.html" style="color: var(--text-primary); text-decoration: none; border-bottom: 1px dashed var(--text-secondary); padding-bottom: 1px; transition: border-color var(--transition-fast);">Juan A. Baez</a></p>
+      </footer>
+    </aside>
+
+    <!-- Mapa y controles flotantes -->
+    <main class="map-container">
+      <div id="map"></div>
+
+      <!-- Controles flotantes sobre el mapa -->
+      <div class="floating-controls">
+        <button id="sound-toggle-btn" class="control-btn active" title="Activar/Desactivar Sonido">
+          <svg class="icon icon-volume" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span>Sonido</span>
+        </button>
+
+        <button id="notification-toggle-btn" class="control-btn active" title="Notificaciones: Todos los Sismos" style="position: relative;">
+          <svg class="icon icon-bell" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span>Notificaciones</span>
+          <span class="control-btn-badge" style="display: none;">Todo</span>
+        </button>
+
+        <button id="simulate-btn" class="control-btn accent-btn" title="Simular un terremoto personalizado">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 10a8 8 0 0 1 20 0M5 13a5 5 0 0 1 14 0M8 16a2 2 0 0 1 8 0M12 20v.01"/>
+          </svg>
+          <span>Simular Sismo</span>
+        </button>
+      </div>
+
+      <!-- Leyenda del mapa -->
+      <div class="map-legend" id="map-legend">
+        <div class="legend-header" id="legend-toggle-btn" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;">
+          <div class="legend-title" style="margin-bottom:0;">Magnitud</div>
+          <svg class="legend-toggle-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="transition:transform var(--transition-fast);">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </div>
+        <div class="legend-items" id="legend-items">
+          <div class="legend-item"><span class="legend-color color-low"></span> <span>&lt; 3.5 (Leve)</span></div>
+          <div class="legend-item"><span class="legend-color color-mid"></span> <span>3.5 - 4.5 (Moderado)</span></div>
+          <div class="legend-item"><span class="legend-color color-high"></span> <span>4.5 - 6.0 (Fuerte)</span></div>
+          <div class="legend-item"><span class="legend-color color-severe"></span> <span>&gt; 6.0 (Severo)</span></div>
+        </div>
+      </div>
+
+      <!-- Overlay para la simulación -->
+      <div id="simulation-overlay" class="simulation-overlay hidden">
+        <div class="simulation-instructions">
+          <div class="sim-banner">MODO SIMULACIÓN ACTIVO</div>
+          <p>Haz clic en cualquier punto del mapa para generar un terremoto ficticio.</p>
+          <button id="cancel-simulation-btn" class="btn-secondary">Cancelar</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Banner de Descarga App Android (Solo visible en Android) -->
+  <div id="android-download-banner" class="android-banner hidden">
+    <div class="banner-content">
+      <span class="banner-close" id="close-banner-btn">&times;</span>
+      <div class="banner-text">
+        <strong>📱 Sismología Venezuela</strong>
+        <p>Instala la app para recibir alertas en segundo plano. Mira cómo instalarla de forma segura.</p>
+      </div>
+      <a href="../instalar.html" class="btn-banner-download">
+        Ver Guía de Instalación
+      </a>
+    </div>
+  </div>
+
+  <!-- Banner de Nueva Versión (Update) -->
+  <div id="update-banner" class="android-banner hidden" style="border-color: var(--accent-blue); box-shadow: var(--shadow-lg), 0 0 15px rgba(0, 122, 255, 0.2);">
+    <div class="banner-content">
+      <span class="banner-close" id="close-update-banner-btn">&times;</span>
+      <div class="banner-text">
+        <strong>🚀 Actualización Disponible</strong>
+        <p>Hay una nueva versión de la app con mejoras importantes. ¡Descárgala ahora!</p>
+      </div>
+      <a href="#" id="btn-update-download" class="btn-banner-download" style="background-color: var(--accent-blue); box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);">
+        Descargar Update
+      </a>
+    </div>
+  </div>
+
+  <!-- Local Leaflet JS (Offline support) -->
+  <script src="../leaflet/leaflet.js"></script>
+  <!-- Main Script -->
+  <script src="./main.js"></script>
+</body>
+</html>
