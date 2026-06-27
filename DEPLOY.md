@@ -179,7 +179,7 @@ Editar `version.json` en la raíz:
 ```json
 {
   "version": "X.Y.Z",
-  "downloadUrl": "https://forjadigitales.com/sismos-venezuela.apk"
+  "downloadUrl": "https://forjadigitales.com/sismos-venezuela.apk?v=X.Y.Z"
 }
 ```
 Copiar a `web/`:
@@ -300,7 +300,7 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 
 ```
 [ ] Actualizar CURRENT_VERSION en test/src/main.js
-[ ] Actualizar version.json (raíz) — versión y downloadUrl IONOS
+[ ] Actualizar version.json (raíz) — versión y downloadUrl IONOS (añadiendo el parámetro ?v=X.Y.Z)
 [ ] Copy-Item version.json web\version.json -Force
 [ ] npm run build + post-build.cjs + xcopy a web/ y app/app/src/main/assets/dist/
 [ ] Incrementar versionCode en app/app/build.gradle.kts (ej. de 1 a 2)
