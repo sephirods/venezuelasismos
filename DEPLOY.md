@@ -193,11 +193,18 @@ Copy-Item "version.json" "web\version.json" -Force
 cmd /c "cd test && npm run build && node post-build.cjs && xcopy /E /Y /I dist\* ..\web\ && xcopy /E /Y /I dist\* ..\app\app\src\main\assets\dist\"
 ```
 
-### Paso 4 — Compilar APK Android
+### Paso 4 — Compilar APK Android (Firma Debug Obligatoria para la Web)
+
+> [!IMPORTANT]
+> **TODAS** las descargas directas de la web (`sismos-venezuela.apk`, `sismos-venezuela-X.Y.Z.apk` y `sismos-venezuela-v4.apk`) deben ser compiladas en modo **Debug** para mantener la firma `CN=Android Debug` y evitar conflictos de actualización. **NUNCA** firmar con la clave release oficial para estos archivos.
 
 ```powershell
-cmd /c "cd app && gradlew.bat assembleRelease"
-Copy-Item "app\app\build\outputs\apk\release\app-release.apk" "app\sismos-venezuela.apk" -Force
+cmd /c "cd app && gradlew.bat assembleDebug"
+# Copiar el mismo APK Debug a los tres nombres requeridos para la web
+Copy-Item "app\app\build\outputs\apk\debug\app-debug.apk" "app\sismos-venezuela.apk" -Force
+Copy-Item "app\app\build\outputs\apk\debug\app-debug.apk" "app\sismos-venezuela-v4.apk" -Force
+# Cambiar X.Y.Z por la versión actual
+Copy-Item "app\app\build\outputs\apk\debug\app-debug.apk" "app\sismos-venezuela-X.Y.Z.apk" -Force
 ```
 
 ### Paso 5 — Subir APK y version.json a IONOS
@@ -276,8 +283,8 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 
 ## 9. Errores Frecuentes y Soluciones
 
-> [!WARNING]
-> **NO USAR GIT NI GITHUB**: El repositorio local se encuentra desconectado de GitHub (la carpeta `.git` fue eliminada). Ningún script ni desarrollador de IA debe intentar ejecutar comandos de Git o subir código fuente a GitHub. El despliegue de datos es directo a IONOS y la web la sube el usuario manualmente.
+> [!IMPORTANT]
+> **USO DE GIT Y GITHUB**: El repositorio local y el del servidor sí están conectados a GitHub. Usa Git para rastrear y subir cambios de código fuente. Sin embargo, recuerda que **el despliegue de la app y los datos va directo a IONOS** (el servidor es la fuente de verdad para los clientes, no GitHub raw).
 
 | Error | Causa | Solución |
 |---|---|---|
@@ -298,11 +305,11 @@ ssh_run("tail -5 ~/sismos_scraper.log")
 [ ] npm run build + post-build.cjs + xcopy a web/ y app/app/src/main/assets/dist/
 [ ] Incrementar versionCode en app/app/build.gradle.kts (ej. de 1 a 2)
 [ ] Actualizar versionName en app/app/build.gradle.kts a la nueva versión (ej. "1.1.2")
-[ ] gradlew.bat assembleRelease
-[ ] Copy-Item app-release.apk → app\sismos-venezuela.apk
-[ ] Subir sismos-venezuela.apk a IONOS via SSH stdin
+[ ] gradlew.bat assembleDebug
+[ ] Copiar app-debug.apk a sismos-venezuela.apk, sismos-venezuela-v4.apk y sismos-venezuela-X.Y.Z.apk
+[ ] Subir todos los APKs (sismos-venezuela.apk, sismos-venezuela-v4.apk, sismos-venezuela-X.Y.Z.apk) a IONOS
 [ ] Subir version.json a IONOS via SSH stdin
-[ ] Verificar HTTP 200 en forjadigitales.com/sismos-venezuela.apk
-[ ] Verificar HTTP 200 en forjadigitales.com/version.json
+[ ] Actualizar la regla de redirección en /home/www/clickandbuilds/ForjaDigital/.htaccess para apuntar al nuevo APK vX.Y.Z
+[ ] Verificar HTTP 200 en forjadigitales.com/sismos-venezuela.apk (que redirija a vX.Y.Z)
 [ ] Decirle al usuario que suba web/ a su servidor
 ```
